@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protocol Networks — 7 Clusters</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f5f2ed; overflow: hidden; cursor: grab; }
+  body.dragging { cursor: grabbing; }
+  canvas { display: block; }
+  #hud {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    color: rgba(0,0,0,0.3); font: 11px monospace; letter-spacing: 1px;
+    pointer-events: none; text-align: center; user-select: none;
+  }
+  #legend {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font: 12px/1.8 monospace;
+    color: rgba(0,0,0,0.6);
+    user-select: none;
+    pointer-events: none;
+    min-width: 200px;
+  }
+  #legend h3 {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(0,0,0,0.35);
+    margin-bottom: 10px;
+    font-weight: 400;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-line {
+    width: 22px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">SCROLL TO ZOOM · DRAG TO ORBIT · WASD / ARROWS TO PAN</div>
+<div id="legend">
+  <h3>Legend</h3>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#000"></div>
+    <span>Protocols</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#cc2222"></div>
+    <span>AI Agent</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-line" style="background:rgba(0,0,0,0.15)"></div>
+    <span>Protocol connections</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-line" style="background:rgba(0,0,0,0.2); height:4px;"></div>
+    <span>Backbone cable</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#2266dd"></div>
+    <span>Upstream flow (data ↑)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#22aa44"></div>
+    <span>Downstream flow (data ↓)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#000; width:14px; height:14px;"></div>
+    <span>Junction node</span>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─── SCENE ───
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf5f2ed);
+scene.fog = new THREE.Fog(0xf5f2ed, 150, 400);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1000);
+camera.position.set(0, 40, 140);
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+// ─── NETWORK DEFINITIONS ───
+const NETWORK_DEFS = [
+  { name: 'ETH Sepolia',  protoCount: 7,  pools: 429 },
+  { name: 'Base Sepolia', protoCount: 8,  pools: 126 },
+  { name: 'ARB Sepolia',  protoCount: 12, pools: 67 },
+  { name: 'AVAX Fuji',    protoCount: 11, pools: 34 },
+  { name: 'OP Sepolia',   protoCount: 5,  pools: 41 },
+];
+
+const NETWORK_CENTERS = [
+  { x: 0,    y: 0,   z: 0 },
+  { x: 65,   y: 10,  z: -20 },
+  { x: -60,  y: -5,  z: 15 },
+  { x: 30,   y: -15, z: 55 },
+  { x: -35,  y: 20,  z: -50 },
+];
+
+// Generate protocol positions around a hub for a given count
+function generateProtoPositions(count) {
+  const protos = [{ x: 0, y: 0, z: 0, r: 1.2 }]; // hub
+  for (let i = 0; i < count; i++) {
+    const phi = Math.acos(1 - 2 * (i + 0.5) / count);
+    const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+    const r = 8 + Math.random() * 5;
+    protos.push({
+      x: r * Math.sin(phi) *
+      Math.cos(th
+      i) * Math.cos(theta
+      ),
+      y: r * Math.sin(phi) * Math.sin(theta) * 0.7,
+      z: r * Math.cos(phi),
+      r: 0.4 + Math.random() * 0.5,
+    });
+  }
+  return protos;
+}
+
+const NUM_NETWORKS = 5;
+
+const protoMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+const lineMat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.1 });
+
+// ─── BUILD NETWORKS ───
+const networks = [];
+
+for (let n = 0; n < NUM_NETWORKS; n++) {
+  const def = NETWORK_DEFS[n];
+  const center = NETWORK_CENTERS[n];
+  const template = generateProtoPositions(def.protoCount);
+
+  // Random rotation for variety
+  const rotAngle = Math.random() * Math.PI * 2;
+  const cosR = Math.cos(rotAngle), sinR = Math.sin(rotAngle);
+  const tiltAngle = (Math.random() - 0.5) * 0.6;
+  const cosT = Math.cos(tiltAngle), sinT = Math.sin(tiltAngle);
+
+  const protocols = template.map(p => {
+    let x = p.x * cosR - p.z * sinR;
+    let z = p.x * sinR + p.z * cosR;
+    let y = p.y * cosT - z * sinT;
+    z = p.y * sinT + z * cosT;
+    return {
+      x: x + center.x,
+      y: y + center.y,
+      z: z + center.z,
+      r: p.r,
+    };
+  });
+
+  // Create meshes
+  for (const p of protocols) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(p.r, 20, 20), protoMat);
+    m.position.set(p.x, p.y, p.z);
+    scene.add(m);
+  }
+
+  // Connection lines (hub to all)
+  for (let i = 1; i < protocols.length; i++) {
+    const a = protocols[0], b = protocols[i];
+    const g = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(a.x, a.y, a.z),
+      new THREE.Vector3(b.x, b.y, b.z),
+    ]);
+    scene.add(new THREE.Line(g, lineMat));
+  }
+
+  // Build adjacency (hub connects to all)
+  const adj = protocols.map(() => []);
+  for (let i = 1; i < protocols.length; i++) {
+    adj[0].push(i);
+    adj[i].push(0);
+  }
+
+  // Network label with name + info
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 512; labelCanvas.height = 96;
+  const lctx = labelCanvas.getContext('2d');
+  lctx.font = 'bold 30px monospace';
+  lctx.fillStyle = 'rgba(0,0,0,0.25)';
+  lctx.textAlign = 'center';
+  lctx.fillText(def.name, 256, 35);
+  lctx.font = '20px monospace';
+  lctx.fillStyle = 'rgba(0,0,0,0.15)';
+  lctx.fillText(def.protoCount + ' protocols · ' + def.pools + ' pools', 256, 70);
+  const labelTex = new THREE.CanvasTexture(labelCanvas);
+  const labelSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: labelTex, transparent: true, depthWrite: false })
+  );
+  labelSprite.position.set(center.x, center.y + 18, center.z);
+  labelSprite.scale.set(18, 3.5, 1);
+  scene.add(labelSprite);
+
+  networks.push({ protocols, adj, center });
+}
+
+// ─── AGENTS: 1 red agent per network ───
+const STATE_ORBITING = 0;
+const STATE_TRAVELING = 1;
+
+const ORBIT_SPEED = 1.5;
+const ORBIT_RADIUS = 3;
+const TRAVEL_SPEED = 0.004;
+
+const agentMeshes = [];
+const agentStates = [];
+
+const agentMat = new THREE.MeshBasicMaterial({ color: 0xcc2222 });
+
+for (let n = 0; n < NUM_NETWORKS; n++) {
+  const net = networks[n];
+  const startProto = 1 + Math.floor(Math.random() * (net.protocols.length - 1));
+  const p = net.protocols[startProto];
+
+  // Agent sphere (red, slightly bigger)
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 16), agentMat);
+  mesh.position.set(p.x + ORBIT_RADIUS, p.y, p.z);
+  scene.add(mesh);
+  agentMeshes.push(mesh);
+
+  // Random orbit basis
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  const nx = Math.sin(phi) * Math.cos(theta);
+  const ny = Math.sin(phi) * Math.sin(theta);
+  const nz = Math.cos(phi);
+  const norm = new THREE.Vector3(nx, ny, nz);
+  const up = Math.abs(ny) < 0.9 ? new THREE.Vector3(0,1,0) : new THREE.Vector3(1,0,0);
+  const t1 = new THREE.Vector3().crossVectors(norm, up).normalize();
+  const t2 = new THREE.Vector3().crossVectors(norm, t1).normalize();
+
+  agentStates.push({
+    network: n,
+    state: STATE_ORBITING,
+    proto: startProto,
+    // Orbit
+    orbitAngle: Math.random() * Math.PI * 2,
+    orbitSpeed: (ORBIT_SPEED + Math.random() * 1) * (Math.random() < 0.5 ? 1 : -1),
+    orbitRadius: ORBIT
+    }
+    // ─── DUST per network ───
+for (let n = 0; n < NUM_NETWORKS; n++) {
+  const c = NETWORK_CENTERS[n];
+  const count = 300;
+  const dPos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    dPos[i*3]   = c.x + (Math.random()-0.5) * 60;
+    dPos[i*3+1] = c.y + (Math.random()-0.5) * 40;
+    dPos[i*3+2] = c.z + (Math.random()-0.5) * 60;
+  }
+  const dGeo = new THREE.BufferGeometry();
+  dGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+  scene.add(new THREE.Points(dGeo, new THREE.PointsMaterial({
+    size: 0.2, color: 0x000000, transparent: true, opacity: 0.06, depthWrite: false, sizeAttenuation: true,
+  })));
+}
+
+// ─── BACKBONE CABLES ───
+// All cables converge to a single junction point high above
+const JUNCTION = new THREE.Vector3(0, 90, 0);
+const CABLE_SEGMENTS = 40;
+const CABLE_THICKNESS = 0.15;
+
+// Junction node
+const junctionMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(1.2, 20, 20),
+  new THREE.MeshBasicMaterial({ color: 0x000000 })
+);
+junctionMesh.position.copy(JUNCTION);
+scene.add(junctionMesh);
+
+// 1 cable per network
+const cables = [];
+const blueSpheres = [];
+const greenSpheres = [];
+
+const blueMat = new THREE.MeshBasicMaterial({ color: 0x2266dd });
+const greenMat = new THREE.MeshBasicMaterial({ color: 0x22aa44 });
+
+for (let n = 0; n < NUM_NETWORKS; n++) {
+  const c = NETWORK_CENTERS[n];
+  const bottom = new THREE.Vector3(c.x, c.y, c.z);
+
+  const sway = (Math.random() - 0.5) * 8;
+  const ctrl1 = new THREE.Vector3(
+    JUNCTION.x * 0.7 + c.x * 0.3 + sway * 0.4,
+    JUNCTION.y * 0.7 + c.y * 0.3,
+    JUNCTION.z * 0.7 + c.z * 0.3 + sway * 0.3
+  );
+  const ctrl2 = new THREE.Vector3(
+    JUNCTION.x * 0.3 + c.x * 0.7 + sway * 0.6,
+    JUNCTION.y * 0.3 + c.y * 0.7,
+    JUNCTION.z * 0.3 + c.z * 0.7 + sway * 0.5
+  );
+
+  const curve = new THREE.CubicBezierCurve3(JUNCTION, ctrl1, ctrl2, bottom);
+
+  // Thick tube
+  const tubeGeo = new THREE.TubeGeometry(curve, CABLE_SEGMENTS, CABLE_THICKNESS, 6, false);
+  const tubeMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.12 });
+  scene.add(new THREE.Mesh(tubeGeo, tubeMat));
+
+  cables.push({ curve });
+
+  // Blue sphere (ascending: bottom → top) — all start at bottom
+  const blue = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 14), blueMat);
+  scene.add(blue);
+  blueSpheres.push({
+    mesh: blue,
+    cable: n,
+    t: 1.0, // start at bottom
+    speed: 0.07,
+  });
+
+  // Green sphere (descending: top → bottom) — all start at top
+  const green = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 14), greenMat);
+  scene.add(green);
+  greenSpheres.push({
+    mesh: green,
+    cable: n,
+    t: 0.0, // start at top
+    speed: 0.07,
+  });
+}
+// Orbit target (pan shifts this)
+const lookTarget = new THREE.Vector3(0, 0, 0);
+let rotY = 0, rotX = 0.3, targetRotY = 0, targetRotX = 0.3;
+let camDist = 140, targetDist = 140;
+let dragging = false, prev = { x: 0, y: 0 };
+
+// Key state for WASD/arrows
+const keys = {};
+window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+renderer.domElement.addEventListener('mousedown', e => {
+  dragging = true; prev = { x: e.clientX, y: e.clientY };
+  document.body.classList.add('dragging');
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  targetRotY += (e.clientX - prev.x) * 0.005;
+  targetRotX += (e.clientY - prev.y) * 0.005;
+  targetRotX = Math.max(-1.2, Math.min(1.2, targetRotX));
+  prev = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener('mouseup', () => { dragging = false; document.body.classList.remove('dragging'); });
+window.addEventListener('wheel', e => {
+  targetDist += e.deltaY * 0.08;
+  targetDist = Math.max(15, Math.min(350, targetDist));
+}, { passive: true });
+
+// Touch
+renderer.domElement.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) { dragging = true; prev = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.tou
+    agent.wanderAmp * 0.5;
+
+      mesh.position.copy(pos);
+    }
+  }
+
+  // Update cable flow spheres
+  for (let n = 0; n < NUM_NETWORKS; n++) {
+    const cable = cables[n];
+
+    // Blue sphere — ascending (bottom→top: t goes 1→0)
+    const bs = blueSpheres[n];
+    bs.t -= bs.speed * dt;
+    if (bs.t < 0) bs.t += 1;
+    bs.mesh.position.copy(cable.curve.getPoint(bs.t));
+
+    // Green sphere — descending (top→bottom: t goes 0→1)
+    const gs = greenSpheres[n];
+    gs.t += gs.speed * dt;
+    if (gs.t > 1) gs.t -= 1;
+    gs.mesh.position.copy(cable.curve.getPoint(gs.t));
+  }
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
