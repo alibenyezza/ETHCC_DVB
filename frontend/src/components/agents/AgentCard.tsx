@@ -4,7 +4,7 @@ export default function AgentCard() {
       <div className="flex items-center">
         <h3 className="text-sm font-medium tracking-wide text-white">Agent Proposal</h3>
       </div>
-      <p className="text-xs text-white/50 tracking-widest uppercase">Validating...</p>
+      <p className="text-xs text-white tracking-widest uppercase">Validating...</p>
       {/* TODO: Implement Agent Display and Chart */}
     </div>
   );

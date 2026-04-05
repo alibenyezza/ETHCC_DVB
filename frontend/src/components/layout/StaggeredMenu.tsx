@@ -75,11 +75,11 @@ interface StaggeredMenuProps {
 
 export const StaggeredMenu = ({
   position = 'right',
-  colors = ['#272757', '#1a1a44'],
+  colors = ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.05)'],
   items = [],
   socialItems = [],
   displaySocials = true,
-  displayItemNumbering = true,
+  displayItemNumbering = false,
   className,
   logoText = 'StarkYield',
   logoImage,
@@ -344,7 +344,7 @@ export const StaggeredMenu = ({
       <div className="sm-panel-wrap">
         <div ref={preLayersRef} className="sm-prelayers" aria-hidden="true">
           {(() => {
-            const raw = colors && colors.length ? colors.slice(0, 4) : ['#272757', '#1a1a44'];
+            const raw = colors && colors.length ? colors.slice(0, 4) : ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.05)'];
             let arr = [...raw];
             if (arr.length >= 3) {
               const mid = Math.floor(arr.length / 2);

@@ -1,6 +1,5 @@
 "use client";
 
-import StarBorder from "@/components/ui/StarBorder";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import { useRouter } from "next/navigation";
 import { ArrowRightIcon } from "lucide-react";
@@ -60,12 +59,13 @@ export default function Home() {
           Dynamic capital reallocation via CCTP. Settlement on Arc. Compute on 0G. Privacy by design.
         </p>
 
-        <StarBorder as="button" color="#ffffff" speed="4s" onClick={() => router.push('/dashboard')} className="scale-90">
-          <span className="flex items-center gap-2 font-semibold text-base py-1 px-4">
-            Launch App
-            <ArrowRightIcon size={18} />
-          </span>
-        </StarBorder>
+        <button 
+          onClick={() => router.push('/dashboard')} 
+          className="flex items-center gap-2 font-semibold text-base py-3 px-8 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full transition-all duration-300 backdrop-blur-sm mt-4 text-white"
+        >
+          <span>Launch App</span>
+          <ArrowRightIcon size={18} />
+        </button>
       </div>
 
       {/* THE OPPORTUNITY (Transition Banner) */}
