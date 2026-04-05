@@ -22,6 +22,8 @@ const CHAIN_TO_DEPLOYMENT_KEY: Partial<Record<ChainName, string>> = {
   ETH: "eth_sepolia",
   BASE: "base_sepolia",
   ARB: "arb_sepolia",
+  OP: "op_sepolia",
+  AVAX: "avax_fuji",
 };
 
 let deployments: Record<string, any> | null = null;
