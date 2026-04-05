@@ -6,38 +6,77 @@ export const USDC_ADDRESSES: Record<string, string> = {
   ETH: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
   BASE: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   ARB: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+  AVAX: "0x5425890298aed601595a70AB815c96711a31Bc65",
+  OP: "0x5fd84259d66Cd46123540766Be93DFE6D43130D7",
+  POLY: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
+  UNICHAIN: "0x0000000000000000000000000000000000000000", // TBD
+  LINEA: "0x0000000000000000000000000000000000000000", // TBD
+  SONIC: "0x0000000000000000000000000000000000000000", // TBD
+  WORLD: "0x0000000000000000000000000000000000000000", // TBD
+  SEI: "0x0000000000000000000000000000000000000000", // TBD
+  BNB: "0x0000000000000000000000000000000000000000", // TBD
+  INK: "0x0000000000000000000000000000000000000000", // TBD
 };
 
-// USDC decimals — 6 partout (y compris Arc, verifie on-chain)
+// USDC decimals — 6 partout
 export const USDC_DECIMALS: Record<string, number> = {
-  arc: 6,
-  ETH: 6,
-  BASE: 6,
-  ARB: 6,
+  arc: 6, ETH: 6, BASE: 6, ARB: 6, AVAX: 6, OP: 6,
+  POLY: 6, UNICHAIN: 6, LINEA: 6, SONIC: 6, WORLD: 6,
+  SEI: 6, BNB: 6, INK: 6,
 };
 
-// CCTP Domain IDs
+// CCTP Domain IDs (all 13 chains + Arc)
 export const DOMAIN_IDS: Record<string, number> = {
   arc: 26,
   ETH: 0,
-  BASE: 6,
+  AVAX: 1,
+  OP: 2,
   ARB: 3,
+  BASE: 6,
+  POLY: 7,
+  UNICHAIN: 10,
+  LINEA: 11,
+  SONIC: 13,
+  WORLD: 14,
+  SEI: 16,
+  BNB: 17,
+  INK: 21,
 };
 
 // Chain IDs (testnet)
 export const CHAIN_IDS: Record<string, number> = {
   arc: 5042002,
   ETH: 11155111,
-  BASE: 84532,
+  AVAX: 43113,
+  OP: 11155420,
   ARB: 421614,
+  BASE: 84532,
+  POLY: 80002,
+  UNICHAIN: 1301,
+  LINEA: 59141,
+  SONIC: 64165,
+  WORLD: 4801,
+  SEI: 713715,
+  BNB: 97,
+  INK: 763373,
 };
 
-// RPC URLs
+// RPC URLs (testnet)
 export const RPC_URLS: Record<string, string> = {
   arc: "https://rpc.testnet.arc.network",
   ETH: "https://rpc.sepolia.org",
-  BASE: "https://sepolia.base.org",
+  AVAX: "https://api.avax-test.network/ext/bc/C/rpc",
+  OP: "https://sepolia.optimism.io",
   ARB: "https://sepolia-rollup.arbitrum.io/rpc",
+  BASE: "https://sepolia.base.org",
+  POLY: "https://rpc-amoy.polygon.technology",
+  UNICHAIN: "https://sepolia.unichain.org",
+  LINEA: "https://rpc.sepolia.linea.build",
+  SONIC: "https://rpc.testnet.soniclabs.com",
+  WORLD: "https://worldchain-sepolia.g.alchemy.com/public",
+  SEI: "https://evm-rpc-testnet.sei-apis.com",
+  BNB: "https://data-seed-prebsc-1-s1.binance.org:8545",
+  INK: "https://rpc-gel-sepolia.inkonchain.com",
 };
 
 // CCTP TokenMessenger par chain (testnet)
@@ -46,6 +85,16 @@ export const CCTP_TOKEN_MESSENGER: Record<string, string> = {
   ETH: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
   BASE: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
   ARB: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  AVAX: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  OP: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  POLY: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  UNICHAIN: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  LINEA: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  SONIC: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  WORLD: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  SEI: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  BNB: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+  INK: "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
 };
 
 // CCTP MessageTransmitter par chain (testnet)
@@ -54,6 +103,16 @@ export const CCTP_MESSAGE_TRANSMITTER: Record<string, string> = {
   ETH: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
   BASE: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
   ARB: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  AVAX: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  OP: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  POLY: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  UNICHAIN: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  LINEA: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  SONIC: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  WORLD: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  SEI: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  BNB: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+  INK: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
 };
 
 // Deployed contract addresses (Arc Testnet)
