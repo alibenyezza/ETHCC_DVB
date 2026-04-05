@@ -1,0 +1,152 @@
+{
+  "arc_testnet": {
+    "chainId": 5042002,
+    "domainId": 26,
+    "rpc": "https://rpc.testnet.arc.network",
+    "explorer": "https://testnet.arcscan.app",
+    "faucet": "https://faucet.circle.com",
+    "vault": "0xE5cD5a7B782800e833dDe8648675e693CBe04ab6",
+    "arcMindToken": "0xE5cD5a7B782800e833dDe8648675e693CBe04ab6",
+    "cctpBridge": "0xf8a2d17B7ba46f9Fc0AD5e19947AdD65e4Efdc4E",
+    "cctpRouter": "0x857b2bD4Ae427162979Cf90C7A5Be4fA19a1507C",
+    "agentPaymaster": "0x8a2A55F62dF6f22e96525Da67c83F6B9caB85898",
+    "usdc": "0x3600000000000000000000000000000000000000",
+    "usdcDecimals": 6,
+    "cctpTokenMessenger": "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+    "cctpMessageTransmitter": "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275"
+  },
+  "eth_sepolia": {
+    "chainId": 11155111,
+    "domainId": 0,
+    "rpc": "https://rpc.sepolia.org",
+    "strategies": {
+      "aave": "0xD3aDc9f3d1fCcDE1fFD7dD3cef61d821947F1535",
+      "compound": "0x857b2bD4Ae427162979Cf90C7A5Be4fA19a1507C",
+      "morpho": "0x8a2A55F62dF6f22e96525Da67c83F6B9caB85898"
+    },
+    "cctpBridge": "0xfa9fb9B6365f2b801cbCd2304BB1068114C8a6A8",
+    "usdc_circle": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "usdcDecimals": 6,
+    "cctpTokenMessenger": "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+    "cctpMessageTransmitter": "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    "protocols": {
+      "aave_v3": {
+        "pool": "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951",
+        "dataProvider": "0x3e9708d80f7B3e43118013075F7e95CE3AB31F31",
+        "usdc": "0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8",
+        "aToken": "0x16dA4541aD1807f4443d92D26044C1147406EB80",
+        "oracle": "0x2da88497588bf89281816106C7259e31AF45a663"
+      },
+      "compound_v3": {
+        "comet": "0xAec1F48e02Cfb822Be958B68C7957156EB3F0b6e",
+        "usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "rewards": "0x8bF5b658bdF0388E8b482ED51B14aef58f90abfD"
+      },
+      "morpho_blue": {
+        "core": "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb",
+        "note": "MarketParams must be discovered on-chain via createMarket events"
+      },
+      "pendle_v2": {
+        "status": "MAINNET_ONLY",
+        "mainnet_router": "0x888888888889758F76e7103c6CbF23ABbF58F946",
+        "note": "No testnet deployment. Use mainnet fork for testing."
+      },
+      "fluid": {
+        "status": "MAINNET_ONLY",
+        "mainnet_fUSDC": "0x9Fb7b4477576Fe5B32be4C1843aFB1e55F251B33",
+        "note": "No testnet deployment. Use mainnet fork for testing."
+      },
+      "yearn_v3": {
+        "vaultFactory": "0x444045c5C13C246e117eD36437303cac8E250aB0",
+        "vaultOriginal": "0x1ab62413e0cf2eBEb73da7D40C70E7202ae14467",
+        "tokenizedStrategy": "0xBB51273D6c746910C7C06fe718f30c936170feD0",
+        "note": "USDC vault address depends on factory deployment. Set YEARN_USDC_VAULT env var."
+      }
+    }
+  },
+  "base_sepolia": {
+    "chainId": 84532,
+    "domainId": 6,
+    "rpc": "https://sepolia.base.org",
+    "strategies": {
+      "aave": "0x563240428394a42476B98d2eAE5F01A3FcAE80F4",
+      "morpho": "0xB990d43AF01f0309c51CcB94F036942686507172"
+    },
+    "cctpBridge": "0xD3aDc9f3d1fCcDE1fFD7dD3cef61d821947F1535",
+    "usdc_circle": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "usdcDecimals": 6,
+    "cctpTokenMessenger": "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+    "cctpMessageTransmitter": "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    "protocols": {
+      "aave_v3": {
+        "pool": "0x8bAB6d1b75f19e9eD9fCe8b9BD338844fF79aE27",
+        "dataProvider": "0xBc9f5b7E248451CdD7cA54e717a2BFe1F32b566b",
+        "usdc": "0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f",
+        "aToken": "0x10F1A9D11CDf50041f3f8cB7191CBE2f31750ACC",
+        "oracle": "0x943b0dE18d4abf4eF02A85912F8fc07684C141dF"
+      },
+      "morpho_blue": {
+        "core": "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb",
+        "note": "MarketParams must be discovered on-chain"
+      },
+      "pendle_v2": {
+        "status": "MAINNET_ONLY",
+        "note": "No testnet deployment"
+      },
+      "fluid": {
+        "status": "MAINNET_ONLY",
+        "mainnet_fUSDC": "0xf42f5795D9ac7e9D757dB633D693cD548Cfd9169",
+        "note": "No testnet deployment"
+      }
+    }
+  },
+  "arb_sepolia": {
+    "chainId": 421614,
+    "domainId": 3,
+    "rpc": "https://sepolia-rollup.arbitrum.io/rpc",
+    "strategies": {
+      "aave": "0x563240428394a42476B98d2eAE5F01A3FcAE80F4"
+    },
+    "cctpBridge": "0xB990d43AF01f0309c51CcB94F036942686507172",
+    "usdc_circle": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+    "usdcDecimals": 6,
+    "cctpTokenMessenger": "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+    "cctpMessageTransmitter": "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    "protocols": {
+      "aave_v3": {
+        "pool": "0xBfC91D59fdAA134A4ED45f7B584cAf96D7792Eff",
+        "dataProvider": "0x12373B5085e3b42D42C1D4ABF3B3Cf4Df0E0Fa01",
+        "usdc": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "aToken": "0x460b97BD498E1157530AEb3086301d5225b91216",
+        "oracle": "0xEf95A6B9e88Bd509Fd67BA741cf2b263DaC65c00"
+      },
+      "pendle_v2": {
+        "status": "MAINNET_ONLY",
+        "note": "No testnet deployment"
+      },
+      "fluid": {
+        "status": "MAINNET_ONLY",
+        "mainnet_fUSDC": "0x1A996cb54bb95462040408C06122D45D6Cdb6096",
+        "note": "No testnet deployment"
+      }
+    }
+  },
+  "_mainnet_reference": {
+    "pendle_v2": {
+      "router": "0x888888888889758F76e7103c6CbF23ABbF58F946",
+      "marketFactoryV6": "0x95a937f7064C75C6Bc257160088C0a9D58cca333",
+      "networks": ["ethereum", "arbitrum", "base"]
+    },
+    "fluid": {
+      "liquidityProxy": "0x52Aa899454998Be5b000Ad077a46Bbe360F4e497",
+      "fUSDC_ethereum": "0x9Fb7b4477576Fe5B32be4C1843aFB1e55F251B33",
+      "fUSDC_arbitrum": "0x1A996cb54bb95462040408C06122D45D6Cdb6096",
+      "fUSDC_base": "0xf42f5795D9ac7e9D757dB633D693cD548Cfd9169",
+      "networks": ["ethereum", "arbitrum", "base"]
+    },
+    "morpho_blue": {
+      "core": "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb",
+      "networks": ["ethereum", "base", "arbitrum"]
+    }
+  }
+}
