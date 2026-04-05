@@ -131,6 +131,46 @@
       }
     }
   },
+  "op_sepolia": {
+    "chainId": 11155420,
+    "domainId": 2,
+    "rpc": "https://sepolia.optimism.io",
+    "strategies": {},
+    "usdc_circle": "0x5fd84259d66Cd46123540766Be93DFE6D43130D7",
+    "usdcDecimals": 6,
+    "cctpTokenMessenger": "0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5",
+    "cctpMessageTransmitter": "0x7865fAfC2db2093669d92c0F33AeEF291086BEFD",
+    "protocols": {
+      "aave_v3": {
+        "pool": "0xb50201558B00496A145fE76f7424749556E326D8",
+        "dataProvider": "0x501B4c19dd9C2e06E94dA7b6D5Ed4ddA013EC741",
+        "usdc": "0x5fd84259d66Cd46123540766Be93DFE6D43130D7",
+        "aToken": "0xa818F1B57c201E092C4A2017A91815034326Efd1"
+      }
+    },
+    "status": "PENDING_DEPLOYMENT"
+  },
+  "avax_fuji": {
+    "chainId": 43113,
+    "domainId": 1,
+    "rpc": "https://api.avax-test.network/ext/bc/C/rpc",
+    "strategies": {
+      "aave": "0x518Cbf0d90DDF658467018e3cBcE29a47F5b7877"
+    },
+    "cctpBridge": "0x29D81e3Ce242E996C200047FB7268dEc3DBE515a",
+    "usdc_circle": "0x6a17716Ce178e84835cfA73AbdB71cb455032456",
+    "usdcDecimals": 6,
+    "cctpTokenMessenger": "0xeb08f243E5d3FCFF26A9E38Ae5520A669f4019d0",
+    "cctpMessageTransmitter": "0xa9fB1b3009DCb79E2fe346c16a604B8Fa8aE0a79",
+    "protocols": {
+      "aave_v3": {
+        "pool": "0xf319Bb55994dD1211bC34A7A26A336C6DD0B1b00",
+        "dataProvider": "0x0B59871DF373136bB7753A7A2675b47ffA0ccC86",
+        "usdc": "0x6a17716Ce178e84835cfA73AbdB71cb455032456",
+        "aToken": "0x2c4a078f1FC5B545f3103c870d22f9AC5F0F673E"
+      }
+    }
+  },
   "_mainnet_reference": {
     "pendle_v2": {
       "router": "0x888888888889758F76e7103c6CbF23ABbF58F946",

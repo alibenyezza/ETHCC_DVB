@@ -1,0 +1,12 @@
+{
+  "name": "arcmind-cre-workflow",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "postinstall": "bun x cre-setup"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "^1.5.0",
+    "viem": "^2.47.10"
+  }
+}

@@ -11,7 +11,7 @@ export function createAvalancheConfig(): AgentConfig {
         type: "aave_v3",
         name: "aave",
         poolId: "AVAX-AAVE-USDC",
-        usdcAddress: "0x5425890298aed601595a70AB815c96711a31Bc65",
+        usdcAddress: "0x6a17716Ce178e84835cfA73AbdB71cb455032456",
         rateModel: { baseRate: 0.01, slope1: 0.04, slope2: 0.75, kink: 0.80 },
         baseData: {
           baseAPY: 4.8,
@@ -26,7 +26,7 @@ export function createAvalancheConfig(): AgentConfig {
         type: "compound_v3",
         name: "benqi",
         poolId: "AVAX-BENQI-USDC",
-        usdcAddress: "0x5425890298aed601595a70AB815c96711a31Bc65",
+        usdcAddress: "0x6a17716Ce178e84835cfA73AbdB71cb455032456",
         rateModel: { baseRate: 0.01, slope1: 0.038, slope2: 0.72, kink: 0.82 },
         baseData: {
           baseAPY: 5.3,
@@ -41,7 +41,7 @@ export function createAvalancheConfig(): AgentConfig {
         type: "compound_v3",
         name: "compound",
         poolId: "AVAX-COMP-USDC",
-        usdcAddress: "0x5425890298aed601595a70AB815c96711a31Bc65",
+        usdcAddress: "0x6a17716Ce178e84835cfA73AbdB71cb455032456",
         rateModel: { baseRate: 0.008, slope1: 0.035, slope2: 0.70, kink: 0.85 },
         baseData: {
           baseAPY: 3.6,

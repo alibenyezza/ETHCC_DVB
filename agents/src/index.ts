@@ -3,6 +3,8 @@ dotenv.config();
 
 import { Agent } from "./core/Agent";
 import { AgentConfig } from "./core/AgentConfig";
+import { AgentServer } from "./api/AgentServer";
+import { getDeploymentSummary } from "./integrations/ContractRegistry";
 import { createEthereumConfig } from "./chains/ethereum.config";
 import { createAvalancheConfig } from "./chains/avalanche.config";
 import { createOptimismConfig } from "./chains/optimism.config";
@@ -40,10 +42,18 @@ async function main() {
   console.log(`  ${Object.keys(CHAIN_CONFIGS).length} chains supported via Circle CCTP`);
   console.log("═══════════════════════════════════════════════════════════════\n");
 
+  // Show deployed contracts
+  const deploymentSummary = getDeploymentSummary();
+  if (deploymentSummary) {
+    console.log(`Contracts: ${deploymentSummary}\n`);
+  }
+
   // Parse command line args
   const args = process.argv.slice(2);
   const chainArg = args.find((a) => a.startsWith("--chain="))?.split("=")[1];
+  const portArg = args.find((a) => a.startsWith("--port="))?.split("=")[1];
   const runAll = args.includes("--all") || !chainArg;
+  const apiPort = parseInt(portArg || "3100");
 
   let chains: string[];
   if (runAll) {
@@ -68,10 +78,21 @@ async function main() {
     return new Agent(config);
   });
 
+  // Start API server (for TEE + Dashboard)
+  const server = new AgentServer(apiPort);
+  server.registerAgents(agents);
+  server.start();
+
+  // Make server accessible to agents for proposal publishing
+  for (const agent of agents) {
+    agent.setServer(server);
+  }
+
   // Graceful shutdown
   const shutdown = () => {
     console.log("\n\nShutting down agents...");
     agents.forEach((agent) => agent.stop());
+    server.stop();
     setTimeout(() => process.exit(0), 2000);
   };
 
