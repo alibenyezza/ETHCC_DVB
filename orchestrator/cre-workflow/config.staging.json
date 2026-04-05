@@ -1,0 +1,53 @@
+{
+  "schedule": "*/30 * * * * *",
+  "agentApiUrl": "http://localhost:3100",
+  "attestationContract": "0x0000000000000000000000000000000000000000",
+  "attestationChain": "ethereum-testnet-sepolia",
+  "safetyThreshold": 0.7,
+  "maxProtocolPct": 40,
+  "maxChainPct": 50,
+  "bufferPct": 10,
+  "deployedChains": [
+    {
+      "chain": "ETH",
+      "chainSelector": "ethereum-testnet-sepolia",
+      "strategies": {
+        "aave": "0xD3aDc9f3d1fCcDE1fFD7dD3cef61d821947F1535",
+        "compound": "0x857b2bD4Ae427162979Cf90C7A5Be4fA19a1507C",
+        "morpho": "0x8a2A55F62dF6f22e96525Da67c83F6B9caB85898"
+      },
+      "usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
+    },
+    {
+      "chain": "BASE",
+      "chainSelector": "ethereum-testnet-sepolia-base-1",
+      "strategies": {
+        "aave": "0x563240428394a42476B98d2eAE5F01A3FcAE80F4",
+        "morpho": "0xB990d43AF01f0309c51CcB94F036942686507172"
+      },
+      "usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+    },
+    {
+      "chain": "ARB",
+      "chainSelector": "ethereum-testnet-sepolia-arbitrum-1",
+      "strategies": {
+        "aave": "0x563240428394a42476B98d2eAE5F01A3FcAE80F4"
+      },
+      "usdc": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d"
+    },
+    {
+      "chain": "AVAX",
+      "chainSelector": "avalanche-testnet-fuji",
+      "strategies": {
+        "aave": "0x518Cbf0d90DDF658467018e3cBcE29a47F5b7877"
+      },
+      "usdc": "0x6a17716Ce178e84835cfA73AbdB71cb455032456"
+    },
+    {
+      "chain": "OP",
+      "chainSelector": "ethereum-testnet-sepolia-optimism-1",
+      "strategies": {},
+      "usdc": "0x5fd84259d66Cd46123540766Be93DFE6D43130D7"
+    }
+  ]
+}

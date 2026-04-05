@@ -79,10 +79,16 @@ describe("DepositImpact", () => {
       },
     ];
 
-    it("should allocate 100% total across pools", () => {
+    it("should allocate up to 100% respecting 40% per-protocol cap", () => {
       const split = impact.computeOptimalSplit(pools, 50_000);
       const totalPct = split.reduce((sum, s) => sum + s.percentage, 0);
-      expect(totalPct).toBe(100);
+      // With 2 pools and 40% cap: max is 80%. With 3+ pools: reaches 100%.
+      expect(totalPct).toBeLessThanOrEqual(100);
+      expect(totalPct).toBeGreaterThanOrEqual(pools.length * 40);
+      // Each position must respect the cap
+      for (const s of split) {
+        expect(s.percentage).toBeLessThanOrEqual(40);
+      }
     });
 
     it("should return at least one allocation", () => {
@@ -90,10 +96,10 @@ describe("DepositImpact", () => {
       expect(split.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("single pool should get 100%", () => {
+    it("single pool should be capped at 40%", () => {
       const split = impact.computeOptimalSplit([pools[0]], 50_000);
       expect(split).toHaveLength(1);
-      expect(split[0].percentage).toBe(100);
+      expect(split[0].percentage).toBeLessThanOrEqual(40);
     });
 
     it("post-deposit yield should be lower than raw yield", () => {

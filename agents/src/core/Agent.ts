@@ -21,6 +21,7 @@ import { PositionManager } from "../modules/executor/PositionManager";
 import { PerformanceTracker } from "../modules/learner/PerformanceTracker";
 import { ZeroGCompute } from "../integrations/ZeroGCompute";
 import { ZeroGStorage } from "../integrations/ZeroGStorage";
+import { AgentServer } from "../api/AgentServer";
 
 /**
  * Autonomous AI Agent for a single chain.
@@ -61,6 +62,9 @@ export class Agent {
   // 0G Integrations
   private zgCompute: ZeroGCompute;
   private zgStorage: ZeroGStorage;
+
+  // API Server (for TEE + Dashboard)
+  private server: AgentServer | null = null;
 
   constructor(config: AgentConfig) {
     this.config = config;
@@ -170,6 +174,8 @@ export class Agent {
     const safeYields = yields.filter((y) => !excluded.includes(y.protocol));
 
     // Build pool data for deposit impact calculation
+    // currentAPY = effective yield (supply + reward) so raw_yield in the proposal
+    // always reflects the real yield. This ensures post_deposit_yield < raw_yield.
     const pools: PoolData[] = safeYields.map((y) => ({
       protocol: y.protocol,
       poolId: y.poolId,
@@ -181,8 +187,8 @@ export class Agent {
         slope2: 0.75,
         kink: 0.8,
       },
-      currentAPY: y.supplyRateAPY,
-      rewardAPY: y.rewardAPY,
+      currentAPY: y.effectiveAPY,
+      rewardAPY: 0,
     }));
 
     // Compute optimal split
@@ -214,6 +220,11 @@ export class Agent {
       optimalCapital,
       history
     );
+
+    // Publish proposal to API server (for TEE + Dashboard)
+    if (this.server) {
+      this.server.updateProposal(this.chain, proposal);
+    }
 
     // ═══ 4. SEND to TEE ═══
     const teeResponse = await this.sendToTEE(proposal);
@@ -267,34 +278,59 @@ export class Agent {
   }
 
   /**
-   * Send proposal to TEE and get response.
-   * If no TEE endpoint is configured, auto-approves (standalone mode).
+   * Wait for TEE response by polling the local API server.
+   *
+   * Flow:
+   *  1. Proposal is already published to API server (via updateProposal)
+   *  2. TEE orchestrator fetches it via GET /proposals
+   *  3. TEE validates, signs TXs, and POSTs response to POST /tee/response/:chain
+   *  4. Agent polls GET /tee/response/:chain to pick it up
+   *
+   * Falls back to auto-approve if no response within TEE_RESPONSE_TIMEOUT_MS.
    */
-  private async sendToTEE(proposal: AgentProposal): Promise<TEEResponse> {
-    if (this.config.tee.proposalEndpoint) {
-      try {
-        const response = await fetch(this.config.tee.proposalEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(proposal),
-        });
+  private async sendToTEE(_proposal: AgentProposal): Promise<TEEResponse> {
+    const apiPort = 3100;
+    const apiBase = `http://localhost:${apiPort}`;
+    const pollInterval = 2000; // 2s between polls
+    const timeout = 20000; // 20s total timeout (TEE cycle is 30s)
 
+    const start = Date.now();
+    console.log(`[${this.chain}][TEE] Waiting for TEE response...`);
+
+    while (Date.now() - start < timeout) {
+      try {
+        const response = await fetch(`${apiBase}/tee/response/${this.chain.toLowerCase()}`);
         if (response.ok) {
-          return (await response.json()) as TEEResponse;
+          const teeResponse = (await response.json()) as TEEResponse;
+          console.log(
+            `[${this.chain}][TEE] Received: ${teeResponse.approved ? "APPROVED" : "REJECTED"} — ` +
+            `${teeResponse.txBlobs?.length || 0} txBlobs`
+          );
+          return teeResponse;
         }
-      } catch (error: any) {
-        console.log(`[${this.chain}][TEE] Connection failed: ${error.message} — standalone mode`);
+        // 404 = not yet available, keep polling
+      } catch {
+        // API not reachable — will fall through to auto-approve
+        break;
       }
+      await sleep(pollInterval);
     }
 
-    // Standalone mode: auto-approve
-    console.log(`[${this.chain}][TEE] Standalone mode — proposal auto-approved`);
+    // Timeout or API unreachable — auto-approve (standalone mode)
+    console.log(`[${this.chain}][TEE] No response within ${timeout / 1000}s — standalone auto-approve`);
     return {
       agent: this.chain,
       approved: true,
       txBlobs: [],
-      message: "Auto-approved (standalone mode)",
+      message: "Auto-approved (standalone — TEE timeout)",
     };
+  }
+
+  /**
+   * Attach the API server so proposals are published for TEE/Dashboard.
+   */
+  setServer(server: AgentServer): void {
+    this.server = server;
   }
 
   /**

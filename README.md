@@ -2,10 +2,10 @@
 
 ### Autonomous AI Agents for Cross-Chain DeFi Yield Optimization
 
-> One autonomous AI agent per chain. Each observes, reasons, proposes, and executes — blind to every other chain. A Chainlink TEE fuses all proposals, validates strategies, and dynamically reallocates capital across chains via CCTP. Settlement on Arc. Compute on 0G. Privacy by design.
+> One autonomous AI agent per chain. Each observes, reasons, proposes, and executes — blind to every other chain. A Chainlink CRE Workflow fuses all proposals inside a TEE, validates strategies, and dynamically reallocates capital across chains via CCTP. Settlement on Arc. Compute on 0G. Privacy by design.
 
 [![Arc](https://img.shields.io/badge/Settlement-Arc_(Circle_L1)-00D4FF?style=flat-square)](#arc--settlement-hub)
-[![Chainlink](https://img.shields.io/badge/Privacy-Chainlink_Confidential_Compute-375BD2?style=flat-square)](#chainlink-confidential-compute--the-private-brain)
+[![Chainlink](https://img.shields.io/badge/Orchestration-Chainlink_CRE-375BD2?style=flat-square)](#chainlink-cre--the-orchestrator)
 [![0G](https://img.shields.io/badge/AI_Compute-0G_Network-8B5CF6?style=flat-square)](#0g--decentralized-ai-infrastructure)
 [![CCTP](https://img.shields.io/badge/Transport-Circle_CCTP-00D395?style=flat-square)](#circle-cctp--gateway--usdc-rails)
 
@@ -26,9 +26,9 @@
 11. [Why Agents Are Blind](#why-agents-are-blind)
 12. [Scenarios](#scenarios)
 13. [Tech Stack](#tech-stack)
-14. [User Experience](#user-experience)
-15. [ArcMind vs Giza](#arcmind-vs-giza)
-16. [MVP Scope (Hackathon)](#mvp-scope-hackathon)
+14. [Project Structure](#project-structure)
+15. [Implementation Status](#implementation-status)
+16. [Getting Started](#getting-started)
 17. [Hackathon Track Eligibility](#hackathon-track-eligibility)
 18. [Technical Summary](#technical-summary)
 
@@ -50,9 +50,9 @@ Every yield optimizer today — Beefy, Yearn, ZyFi, Giza — follows the same ar
 
 ## The Solution
 
-ArcMind deploys **one autonomous AI agent per supported chain**. Each agent is a full fund manager for its chain — it observes every protocol, reasons about opportunities with its own ML model, proposes strategies, and executes trades. But each agent is **completely blind** to what happens on every other chain.
+ArcMind deploys **one autonomous AI agent per supported chain** (up to 13 chains). Each agent is a full fund manager for its chain — it observes every protocol, reasons about opportunities with its own ML model, proposes strategies, and executes trades. But each agent is **completely blind** to what happens on every other chain.
 
-A **Chainlink Confidential Compute TEE** sits at the center. It receives encrypted proposals from all agents, validates strategies against security rules, and — every 6-7 hours — **reallocates capital between chains via CCTP** based on which agents are delivering the best risk-adjusted yields. Capital flows naturally toward the best-performing chains and away from underperforming ones.
+A **Chainlink CRE Workflow** running on a Decentralized Oracle Network (DON) sits at the center. It collects encrypted proposals from all agents via ConfidentialHTTPClient, validates strategies against security rules inside the TEE, and — every 6-7 hours — **reallocates capital between chains via CCTP** based on which agents are delivering the best risk-adjusted yields.
 
 The user deposits USDC once on Arc, receives `arcMIND` share tokens, and sees a single number: their APY. Behind the scenes, autonomous AI agents are continuously optimizing across every major DeFi chain.
 
@@ -80,47 +80,49 @@ The user deposits USDC once on Arc, receives `arcMIND` share tokens, and sees a 
         |        |        |        |        |
         v        v        v        v        v
     +-------+ +------+ +------+ +------+ +------+
-    | AGENT | |AGENT | |AGENT | |AGENT | |AGENT |  ...up to 12
-    |  ETH  | | BASE | | ARB  | |  OP  | | POLY |
+    | AGENT | |AGENT | |AGENT | |AGENT | |AGENT |  ...up to 13
+    |  ETH  | | BASE | | ARB  | | AVAX | |  OP  |
     |       | |      | |      | |      | |      |
     | Sees  | |Sees  | |Sees  | |Sees  | |Sees  |
     | ONLY  | |ONLY  | |ONLY  | |ONLY  | |ONLY  |
-    | ETH   | |BASE  | |ARB   | |OP    | |POLY  |
+    | ETH   | |BASE  | |ARB   | |AVAX  | |OP    |
     +---+---+ +--+---+ +--+---+ +--+---+ +--+---+
         |        |        |        |        |
         |  Encrypted proposals every 30s    |
         +--------+--------+--------+--------+
                           |
                 +---------v---------+
-                |        TEE        |
-                |   (Chainlink      |
-                |    Confidential   |
-                |    Compute)       |
+                |   CHAINLINK CRE   |
+                |   WORKFLOW (DON)   |
                 |                   |
-                | JOB 1 (every 30s):|
-                |  Validate local   |
-                |  strategies       |
+                | ConfidentialHTTP  |
+                | fetches proposals |
+                | (encrypted,      |
+                |  enclave-only)   |
                 |                   |
-                | JOB 2 (every 6-7h)|
-                |  Compare agents   |
-                |  Reallocate       |
-                |  capital via CCTP |
+                | Validate each    |
+                | strategy (BFT)   |
                 |                   |
-                | Signs all TX      |
-                | Attestation ->    |
-                |   0G Chain        |
+                | Reallocation     |
+                | every 6-7h       |
+                |                   |
+                | Batch response   |
+                | via HTTPClient   |
+                | (DON consensus)  |
+                |                   |
+                | Attestation hash |
+                | -> 0G Chain      |
                 +---------+---------+
                           |
-                 Pre-signed TX blobs
+                 Approved/Rejected + TX blobs
                           |
         +-----------------+-----------------+
         |        |        |        |        |
         v        v        v        v        v
-      ETH      BASE     ARB      OP      POLY
-     Aave     Morpho   Morpho   Aave    Aave
-     Comp     Aave     Aave     Sonne   Comp
-     Morpho   Comp     Comp
-              Moon
+      ETH      BASE     ARB     AVAX      OP
+     Aave     Morpho   Aave    Aave     Aave
+     Comp     Aave     Comp    Benqi    Sonne
+     Morpho   Comp     Morpho
 ```
 
 ---
@@ -165,12 +167,13 @@ AGENT-BASE (runs continuously on 0G Compute)
    Full strategy + yield curve + reasoning
 
 4. WAIT
+   Polls GET /tee/response/:chain every 2s (20s timeout)
    TEE validates or rejects
    TEE may adjust capital allocation (every 6-7h)
 
 5. EXECUTE
    Receives pre-signed TX blobs from TEE
-   Deploys capital according to approved strategy
+   Broadcasts USDC approve + strategy deposit TX
    Monitors positions continuously
    Harvests and compounds rewards
 
@@ -222,92 +225,72 @@ All risk signals are included in the agent's proposal to the TEE. A proposal wit
 
 Every 30 seconds, each agent sends an encrypted proposal to the TEE. The proposal contains its full local strategy and its yield curve showing how much capital it can efficiently deploy.
 
-```
-AGENT-BASE PROPOSAL (encrypted, sent to TEE):
-
+```json
 {
-  agent: "BASE",
-  timestamp: 1712345678,
+  "agent": "BASE",
+  "timestamp": 1712345678,
 
-  // Local strategy
-  strategy: {
-    positions: [
+  "strategy": {
+    "positions": [
       {
-        protocol: "morpho_v3",
-        pool_id: "POOL-008",
-        action: "deposit",
-        amount_pct: 65,
-        raw_yield: 6.8,
-        post_deposit_yield: 5.9,
-        reasoning: "Vault #3 curated by Steakhouse, consistent yield,
-                    deposit impact modeled at -0.9% for current allocation"
+        "protocol": "morpho_v3",
+        "pool_id": "POOL-008",
+        "action": "deposit",
+        "amount_pct": 65,
+        "raw_yield": 6.8,
+        "post_deposit_yield": 5.9,
+        "reasoning": "Vault #3 curated by Steakhouse, consistent yield,
+                      deposit impact modeled at -0.9% for current allocation"
       },
       {
-        protocol: "moonwell",
-        pool_id: "POOL-009",
-        action: "deposit",
-        amount_pct: 25,
-        raw_yield: 4.1,
-        post_deposit_yield: 3.9,
-        incentive_boost: 1.3,
-        effective_yield: 5.2,
-        reasoning: "New WELL incentive program started 12h ago,
-                    expected duration 30 days based on governance proposal"
+        "protocol": "moonwell",
+        "pool_id": "POOL-009",
+        "action": "deposit",
+        "amount_pct": 25,
+        "raw_yield": 4.1,
+        "post_deposit_yield": 3.9,
+        "reasoning": "New WELL incentive program started 12h ago"
       },
       {
-        protocol: "compound_v3",
-        pool_id: "POOL-006",
-        action: "deposit",
-        amount_pct: 10,
-        raw_yield: 3.8,
-        post_deposit_yield: 3.7,
-        reasoning: "Safety buffer, deep liquidity for quick exit"
+        "protocol": "compound_v3",
+        "pool_id": "POOL-006",
+        "action": "deposit",
+        "amount_pct": 10,
+        "raw_yield": 3.8,
+        "post_deposit_yield": 3.7,
+        "reasoning": "Safety buffer, deep liquidity for quick exit"
       }
     ],
-    harvest: {
-      pending_morpho_rewards_usd: 142,
-      pending_well_rewards_usd: 38,
-      harvest_profitable: true,
-      optimal_harvest_time: "now",
-      reasoning: "Gas at 0.002 gwei, harvest cost $0.03, rewards $180"
+    "harvest": {
+      "pending_rewards_usd": 180,
+      "harvest_profitable": true,
+      "optimal_harvest_time": "now",
+      "reasoning": "Gas at 0.002 gwei, harvest cost $0.03, rewards $180"
     }
   },
 
-  // Yield curve for cross-chain reallocation (used by TEE every 6-7h)
-  allocation_curve: [
-    { capital: 10000,  blended_yield: 6.5 },
-    { capital: 20000,  blended_yield: 6.1 },
-    { capital: 35000,  blended_yield: 5.6 },
-    { capital: 50000,  blended_yield: 5.2 },
-    { capital: 75000,  blended_yield: 4.3 },
-    { capital: 100000, blended_yield: 3.5 }
+  "allocation_curve": [
+    { "capital": 10000,  "blended_yield": 6.5 },
+    { "capital": 20000,  "blended_yield": 6.1 },
+    { "capital": 35000,  "blended_yield": 5.6 },
+    { "capital": 50000,  "blended_yield": 5.2 },
+    { "capital": 75000,  "blended_yield": 4.3 },
+    { "capital": 100000, "blended_yield": 3.5 }
   ],
 
-  // Risk assessment
-  safety: {
-    overall_score: 0.93,
-    protocol_scores: {
-      morpho_v3: 0.91,
-      moonwell: 0.88,
-      compound_v3: 0.95
-    },
-    alerts: [],
-    chain_health: {
-      sequencer: "ok",
-      gas_gwei: 0.002,
-      recent_reorgs: 0
-    }
+  "safety": {
+    "overall_score": 0.93,
+    "protocol_scores": { "morpho_v3": 0.91, "moonwell": 0.88, "compound_v3": 0.95 },
+    "alerts": [],
+    "chain_health": { "sequencer": "ok", "gas_gwei": 0.002, "recent_reorgs": 0 }
   },
 
-  // Agent metadata
-  current_capital: 35000,
-  optimal_capital: 40000,
-  min_useful_capital: 5000,
-  confidence: 0.84,
-
-  // Performance history
-  last_7d_actual_yield: 5.7,
-  prediction_accuracy_30d: 0.81
+  "current_capital": 35000,
+  "optimal_capital": 40000,
+  "min_useful_capital": 5000,
+  "confidence": 0.84,
+  "last_7d_actual_yield": 5.7,
+  "prediction_accuracy_30d": 0.81
 }
 ```
 
@@ -315,20 +298,20 @@ AGENT-BASE PROPOSAL (encrypted, sent to TEE):
 
 ## The TEE — Two Jobs
 
-The Chainlink Confidential Compute TEE is the single point of trust. It runs inside an Intel SGX enclave that no one can inspect — not Chainlink node operators, not the ArcMind creators, not anyone.
+The Chainlink CRE Workflow runs on a Decentralized Oracle Network (DON) with BFT consensus. Each DON node independently executes the same logic — proposals are fetched via `ConfidentialHTTPClient` (encrypted inside the enclave), validated, and responses distributed via `HTTPClient` with `consensusIdenticalAggregation`.
 
 ### Job 1 — Validate Local Strategies (Every 30 Seconds)
 
-The TEE receives encrypted proposals from all agents and validates each one:
+The CRE Workflow receives encrypted proposals from all agents and validates each one:
 
-1. **Decrypt** all proposals inside the enclave
-2. **Verify** agent signatures — reject any unsigned or tampered proposals
-3. **Check safety scores** — reject any proposal with safety < 0.7
-4. **Check alerts** — if any agent reports a critical risk (TVL drain, exploit, admin activity), reject proposals for that protocol across ALL chains
-5. **Verify diversification** — no single protocol > 40% of the agent's local capital
+1. **Fetch** all proposals via ConfidentialHTTPClient (`encryptOutput: true`) — strategies never leave the encrypted boundary
+2. **Verify** safety scores — reject any proposal with safety < 0.7
+3. **Check alerts** — if any agent reports a critical risk (TVL drain, exploit, admin activity), reject proposals for that protocol across ALL chains
+4. **Verify diversification** — no single protocol > 40% of the agent's local capital
+5. **Verify yield coherence** — post-deposit yield must be < raw yield (rate compression)
 6. **Approve or reject** each strategy
-7. **Sign transactions** — pre-sign the execution TX inside the enclave
-8. **Distribute** encrypted responses to all agents (uniform messages, decoys for rejected agents)
+7. **Build batch response** — all agent responses in a single POST (CRE limits: 5 HTTP calls per execution)
+8. **Distribute** via HTTPClient with DON consensus
 
 ### Job 2 — Cross-Chain Capital Reallocation (Every 6-7 Hours)
 
@@ -342,38 +325,28 @@ Receives yield curves from all agents:
   Agent-ETH:   10K->3.8%  20K->3.5%  50K->2.9%  (weak chain)
   Agent-BASE:  10K->6.5%  20K->6.1%  50K->5.2%  (strong chain)
   Agent-ARB:   10K->5.6%  20K->5.3%  50K->4.4%  (good chain)
+  Agent-AVAX:  10K->4.2%  20K->3.9%  50K->3.2%  (average chain)
   Agent-OP:    10K->3.9%  20K->3.6%  50K->3.1%  (average chain)
-  Agent-POLY:  10K->2.3%  20K->2.0%  50K->1.5%  (weak chain)
 
   Also considers:
   - Safety scores (won't send more capital to risky chains)
   - Agent track record (prediction_accuracy_30d)
   - CCTP cost for each movement
-  - Current allocation vs optimal
-
-  Optimization: allocate capital so that the marginal yield
-  is equalized across all chains, accounting for safety.
+  - Max 50% per chain, 10% buffer on Arc
 
   RESULT:
     ETH:    15K   (reduced from 18K, yield too low)
     BASE:   40K   (increased from 18K, best yield)
     ARB:    30K   (increased from 18K, good yield)
-    OP:     10K   (reduced from 18K, average yield)
-    POLY:    0K   (cut entirely, yield below threshold)
+    AVAX:   10K   (reduced, average yield)
+    OP:      5K   (reduced, average yield)
     Buffer: 15K   (10% on Arc)
 
   CCTP MOVEMENTS:
-    POLY -> Arc -> BASE:  18K  (full withdrawal from POLY)
-    ETH  -> Arc -> ARB:    3K  (partial shift)
+    ETH  -> Arc -> BASE:   3K  (partial shift)
+    AVAX -> Arc -> ARB:    5K  (partial shift)
     OP   -> Arc -> BASE:   8K  (partial shift)
-    OP   -> Arc -> ARB:    4K  (partial shift)
 ```
-
-After reallocation, each agent receives a new budget notification:
-- Agent-BASE: "Your capital is now 40K. Adjust your positions."
-- Agent-POLY: "Your capital is now 0. Withdraw all and return to Arc."
-
-The agents don't know why their budget changed or where the capital came from.
 
 ---
 
@@ -397,7 +370,7 @@ Yield differentials between chains change slowly — they are driven by utilizat
 
 ### Emergency Override
 
-The 6-7 hour cycle has one exception: **critical risk events bypass the timer**. If any agent reports a critical alert (exploit detected, TVL drain >20%, admin key compromise), the TEE immediately withdraws capital from the affected chain without waiting for the next reallocation cycle. Response time: under 10 seconds from detection to withdrawal.
+The 6-7 hour cycle has one exception: **critical risk events bypass the timer**. If any agent reports a critical alert (exploit detected, TVL drain >20%, admin key compromise), the TEE immediately withdraws capital from the affected chain without waiting for the next reallocation cycle.
 
 ---
 
@@ -407,13 +380,14 @@ The 6-7 hour cycle has one exception: **critical risk events bypass the timer**.
 |------|-------------|
 | **Safety Threshold** | Agent safety score < 0.7 -> strategy rejected entirely |
 | **Critical Veto** | Any critical alert (TVL drain, exploit, admin compromise) -> immediate rejection + emergency withdrawal |
-| **Post-Deposit Yield** | TEE uses post-deposit yields (not raw advertised rates) for all scoring. A pool showing 8% that drops to 5.2% after deposit is scored at 5.2%. |
+| **Post-Deposit Yield** | TEE uses post-deposit yields (not raw advertised rates) for all scoring |
+| **Yield Coherence** | post_deposit_yield must be < raw_yield (rate compression validation) |
 | **Local Diversification** | No single protocol > 40% of an agent's local capital |
 | **Chain Diversification** | No single chain > 50% of total vault capital after reallocation |
-| **Buffer** | 10% minimum stays on Arc for instant withdrawals. Non-negotiable. |
+| **Buffer** | 10% minimum stays on Arc for instant withdrawals |
 | **Reallocation Cost Gate** | Cross-chain movements only execute when projected 24h gain > 2x CCTP round-trip cost |
-| **Track Record Weight** | Agents with higher prediction accuracy over 30 days get more capital at reallocation |
-| **Signature Required** | Every proposal must include a valid agent signature. Unsigned proposals are silently dropped. |
+| **Track Record Weight** | Agents with higher prediction accuracy over 30 days get more capital |
+| **Capital Bounds** | Proposed capital must stay between min_useful_capital and 2x current_capital |
 
 ---
 
@@ -426,34 +400,33 @@ The 6-7 hour cycle has one exception: **critical risk events bypass the timer**.
 | **Privacy by isolation** | Each agent sees only its chain. Compromising one agent reveals zero information about other chains' strategies or the overall allocation. |
 | **Privacy by fusion** | The complete cross-chain picture exists only inside the TEE during its milliseconds of computation. |
 | **Privacy by evanescence** | After each cycle, the TEE retains no internal state. Proposals enter, decisions exit, everything is wiped. |
-| **Verifiability by attestation** | The Chainlink TEE attestation anchored on 0G Chain proves the fusion logic ran untampered. Publicly auditable without revealing the strategy. |
+| **Verifiability by attestation** | The Chainlink TEE attestation anchored on 0G Chain proves the fusion logic ran untampered. |
 | **Selective auditability** | Users can generate view keys for third parties (accountants, auditors, regulators). |
 
 ### Execution Privacy
 
-The TEE does not send instructions in plaintext. It **signs transactions directly** inside the enclave. What exits is an opaque blob of bytes that the agent broadcasts without understanding its contents.
+The TEE does not send instructions in plaintext. It **signs transactions directly** inside the enclave. What exits is an opaque blob of bytes that the agent broadcasts.
 
-**Uniform messaging.** Every cycle, the TEE sends an encrypted message to ALL agents — including those whose strategies were rejected. All messages have identical size and timing. An observer cannot distinguish a real order from a "do nothing" decoy.
+**ConfidentialHTTPClient.** Agent proposals are fetched inside the DON enclave using Chainlink's `ConfidentialHTTPClient` with `encryptOutput: true`. API keys are injected from Vault DON secrets via `{{.AGENT_API_KEY}}` templates — they never leave the encrypted boundary.
 
-**Random timing.** Agents execute within a random window (2-15 minutes), preventing transaction correlation.
+**Uniform messaging.** Every cycle, the TEE sends a batch response to ALL agents — including those whose strategies were rejected. An observer cannot distinguish a real order from a "do nothing" response.
 
-**Private mempools.** On Ethereum, transactions route through Flashbots Protect. On L2s, sequencers include transactions in arrival order.
+**Random timing.** Agents execute within a random window, preventing transaction correlation.
 
 ### Privacy Matrix
 
 | Step | Private? | Mechanism |
 |------|----------|-----------|
 | Agent data collection | Yes | Confidential HTTP (encrypted URLs, keys, responses) |
-| Agent -> TEE proposals | Yes | Encrypted in transit |
-| TEE decision | Yes | Intel SGX enclave |
-| Transaction signing | Yes | Keys inside TEE via Vault DON |
-| Order distribution | Yes | Uniform messages to ALL agents |
+| Agent -> TEE proposals | Yes | ConfidentialHTTPClient with encryptOutput |
+| TEE decision | Yes | Runs inside DON enclave (BFT consensus) |
+| Secret management | Yes | Vault DON secrets, `{{.AGENT_API_KEY}}` injection |
+| Transaction signing | Yes | Keys inside TEE, real nonce/gasPrice from RPC |
+| Order distribution | Yes | Single batch POST, uniform for ALL agents |
 | Execution timing | Yes | Random windows |
 | On-chain transactions | Visible | But spread across random timing windows |
 | Cross-chain reallocation | Yes | Only the TEE knows why capital moved between chains |
 | Attestation | Public | Proves correct execution without revealing strategy |
-
-An observer can see that USDC sits in Morpho on Base. But they cannot know why it is there, how long it will stay, what yield curve analysis led to that chain receiving more capital, when the next reallocation will happen, or what the other agents proposed.
 
 ---
 
@@ -461,13 +434,13 @@ An observer can see that USDC sits in Morpho on Base. But they cannot know why i
 
 Each agent sees everything on its chain but nothing about any other chain. This is the core security feature.
 
-**Anti-compromise.** If someone hacks Agent-BASE, they learn about Base yields and strategies. They learn nothing about Ethereum, Arbitrum, or the cross-chain allocation logic. They have 1 piece of a 12-piece puzzle.
+**Anti-compromise.** If someone hacks Agent-BASE, they learn about Base yields and strategies. They learn nothing about Ethereum, Arbitrum, or the cross-chain allocation logic. They have 1 piece of a 13-piece puzzle.
 
 **Strategy opacity.** The overall ArcMind strategy — how capital is distributed across chains — exists only inside the TEE. No agent knows it. No developer knows it. It emerges from the comparison of blind proposals.
 
-**MEV resistance.** A reallocation from Polygon to Base appears as two separate events (withdrawal + deposit) separated by minutes of random timing. An observer cannot link them or predict the next movement.
+**MEV resistance.** A reallocation from Avalanche to Base appears as two separate events (withdrawal + deposit) separated by minutes of random timing. An observer cannot link them or predict the next movement.
 
-**Creator can't cheat.** The creator built each agent independently. But the cross-chain allocation — which chain gets more, which gets cut — is decided by the TEE based on real-time yield curves. Even the creator cannot predict or manipulate this.
+**Creator can't cheat.** The cross-chain allocation is decided by the TEE based on real-time yield curves. Even the creator cannot predict or manipulate this.
 
 ---
 
@@ -477,7 +450,7 @@ Each agent sees everything on its chain but nothing about any other chain. This 
 
 **Classic optimizer:** Protocol gets hacked -> TVL drops -> yield changes -> optimizer detects yield change -> rebalances. Capital was exposed the entire time.
 
-**ArcMind:** Agent-ARB detects TVL dropping on Radiant (-22% in 1h), flags unusual admin activity, sees smart money withdrawing. It sends a CRITICAL alert in its next proposal (within 30 seconds). The TEE immediately triggers emergency withdrawal from Radiant — before the yield even reflects the problem. Capital returns to Arc. At the next reallocation cycle, the TEE redistributes the freed capital to better-performing chains. The incident is logged on 0G Storage for future detection improvement.
+**ArcMind:** Agent-ARB detects TVL dropping on a lending protocol (-22% in 1h), flags unusual admin activity. It sends a CRITICAL alert in its next proposal (within 30 seconds). The CRE Workflow immediately rejects the proposal and triggers emergency withdrawal. Capital returns to Arc. At the next reallocation cycle, the freed capital is redistributed to better-performing chains.
 
 ### Scenario 2: Dynamic Capital Reallocation
 
@@ -487,9 +460,9 @@ Each agent sees everything on its chain but nothing about any other chain. This 
 - Agent-ETH reports: "Best I can do is 3.2% with current capital."
 - Agent-BASE reports: "I can deliver 6.1% if you give me 40K. New Morpho vault with excellent curator."
 - Agent-ARB reports: "Steady 5.3% with current capital, room for more."
-- Agent-POLY reports: "Yields collapsed to 1.5%, not worth keeping capital here."
+- Agent-AVAX reports: "4.2% from Aave, stable and safe."
 
-The TEE reallocates: pulls capital from ETH and POLY via CCTP through Arc, sends more to BASE and ARB. Each agent adjusts its local strategy with its new budget. The agents don't know where their new capital came from.
+The TEE reallocates: pulls capital from ETH via CCTP through Arc, sends more to BASE and ARB. Each agent adjusts its local strategy with its new budget. The agents don't know where their new capital came from.
 
 ### Scenario 3: Deposit Impact Intelligence
 
@@ -506,7 +479,7 @@ The TEE reallocates: pulls capital from ETH and POLY via CCTP through Arc, sends
 Arc is Circle's Layer-1 blockchain designed for stablecoin finance. EVM-compatible, meaning standard Solidity contracts, Foundry, Hardhat, and ethers.js work out of the box.
 
 **Why Arc for ArcMind:**
-- **Gas paid in USDC.** No volatile token needed. Every gas cost is denominated in USDC — ideal for a yield optimizer. USDC on Arc: `0x3600000000000000000000000000000000000000` (18 decimals).
+- **Gas paid in USDC.** No volatile token needed. USDC on Arc: `0x3600000000000000000000000000000000000000` (18 decimals).
 - **Deterministic sub-second finality.** Transactions are immediately final.
 - **Native CCTP/Gateway.** Cross-chain USDC transfers are first-class citizens.
 - **Nanopayments.** Gas-free micro-transactions between agents.
@@ -519,102 +492,170 @@ Arc is Circle's Layer-1 blockchain designed for stablecoin finance. EVM-compatib
 | Faucet | `https://faucet.circle.com` |
 | CCTP Domain ID | `26` |
 
-#### Vault on Arc
-
-ERC-4626 vault deployed via Foundry. Handles USDC deposits, arcMIND token minting/burning, and interfaces with CCTP for cross-chain capital distribution. Can be deployed with Circle's Dev-Controlled Wallets SDK (SCA wallets with Gas Station sponsorship on testnet).
-
 ### Circle CCTP / Gateway — USDC Rails
 
-CCTP handles all USDC movements via native burn/mint. No wrapped tokens, no liquidity pools, no bridge risk. 1:1 transfers with zero slippage. Gateway accelerates to under 500ms.
-
-**Role in ArcMind:** CCTP is the mechanism that enables cross-chain capital reallocation. When the TEE decides to move capital from Polygon to Base, it signs a CCTP burn on Polygon, the USDC transits through Arc, and a CCTP mint delivers it to Base. The agent on Base receives more capital without knowing where it came from.
+CCTP handles all USDC movements via native burn/mint. No wrapped tokens, no liquidity pools, no bridge risk. 1:1 transfers with zero slippage.
 
 | Chain | Domain ID | USDC Address (Testnet) |
 |-------|-----------|----------------------|
 | Arc Testnet | `26` | `0x3600000000000000000000000000000000000000` |
 | Ethereum Sepolia | `0` | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` |
 | Base Sepolia | `6` | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
-| Avalanche Fuji | `1` | `0x5425890298aed601595a70AB815c96711a31Bc65` |
+| Arbitrum Sepolia | `3` | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` |
+| Avalanche Fuji | `1` | `0x6a17716Ce178e84835cfA73AbdB71cb455032456` |
+| Optimism Sepolia | `2` | `0x5fd84259d66Cd46123540766Be93DFE6D43130D7` |
 
 ### Chainlink CRE — The Orchestrator
 
-Chainlink Runtime Environment (CRE) orchestrates the swarm cycle. The complete flow — triggering, signal collection via Confidential HTTP, TEE fusion, instruction generation, on-chain execution — is implemented as a CRE Workflow in TypeScript, compiled to WASM, and run on a Decentralized Oracle Network (DON) with built-in BFT consensus.
+The Chainlink Runtime Environment (CRE) orchestrates the entire swarm cycle. The complete flow — cron triggering, proposal collection via ConfidentialHTTPClient, validation, reallocation, and response distribution — is implemented as a **CRE Workflow in TypeScript**, compiled to WASM, and executed on a Decentralized Oracle Network (DON) with built-in BFT consensus.
 
-The CRE Workflow handles two trigger types:
-- **Cron trigger (every 30s):** collects agent proposals, routes to TEE, distributes responses
-- **Event trigger (on critical alert):** bypasses the 30s cycle for emergency withdrawals
+**CRE Workflow implementation:**
+- **Cron trigger** every 30s (`*/30 * * * * *`)
+- **ConfidentialHTTPClient** fetches proposals with `encryptOutput: true` — agent strategies (yield predictions, optimal splits) never leave the encrypted boundary
+- **Vault DON Secrets** inject API keys via `{{.AGENT_API_KEY}}` templates — keys stored in Chainlink's encrypted key management, never in code
+- **Validation** checks safety threshold (>=0.7), critical alerts, diversification (max 40% per protocol), yield coherence, capital bounds
+- **Cross-chain reallocation** scores chains by yield, confidence, and safety — computes optimal capital distribution with max 50% per chain and 10% buffer
+- **HTTPClient** distributes batch responses with `consensusIdenticalAggregation` — all DON nodes produce the same result (BFT)
+- **Attestation hash** — deterministic decision hash for on-chain anchoring
+
+**CRE simulation result (13 agents):**
+```
+13/13 proposals APPROVED
+Reallocation: 6 CCTP movements computed
+Attestation hash generated
+Simulation complete — workflow validated
+```
 
 ### Chainlink Confidential Compute — The Private Brain
 
-The TEE where all proposals are fused and all decisions are made. Intel SGX enclave that no one can inspect. Confidential HTTP for encrypted agent communication. Distributed Key Generation (DKG) via Vault DON for secret management. Produces attestations anchored on 0G Chain.
+The TEE where all proposals are fused and all decisions are made. ConfidentialHTTPClient runs inside the DON enclave — API keys and strategy data never leave the encrypted boundary. Vault DON for secret management. Produces attestations anchored on 0G Chain.
 
 ### 0G — Decentralized AI Infrastructure
 
-**0G Compute** runs every agent's ML workloads: time-series forecasting (yield trends), anomaly detection (TVL drains, admin activity), deposit impact modeling (rate curve simulation), and NLP (governance proposal analysis). OpenAI-compatible SDK, 50-100ms latency, TEE-verified responses.
+**0G Compute** runs every agent's ML workloads: time-series forecasting (yield trends), anomaly detection (TVL drains, admin activity), deposit impact modeling (rate curve simulation), and NLP (governance proposal analysis). OpenAI-compatible SDK, 50-100ms latency, TEE-verified responses. Model: `qwen-2.5-7b-instruct` on 0G Newton testnet.
 
 **0G Storage** provides persistent decentralized memory: yield histories (30-60 days per pool), performance logs (predictions vs actuals), fine-tuned LoRA adapters, incident records.
 
-**0G Chain** anchors Chainlink TEE attestations, creating a publicly auditable trail that proves every allocation decision was computed inside an untampered enclave.
-
-**0G Fine-Tuning** lets agents improve over time. Each agent can fine-tune a base model (Qwen 0.5B) on its chain's historical data via 0G's fine-tuning service, producing a specialized LoRA adapter stored on 0G Storage.
+**0G Chain** anchors Chainlink TEE attestations, creating a publicly auditable trail that proves every allocation decision was computed inside an untampered enclave. Chain ID: `16600`, RPC: `https://evmrpc-testnet.0g.ai`.
 
 ### Agent Economy — Nanopayments
 
-Each agent is economically autonomous. It pays for its own API calls, 0G Compute inference, and on-chain data queries via **USDC nanopayments on Arc**. These are gas-free micro-transactions. The vault allocates budgets. An agent that costs more than the value of its signals is naturally de-prioritized — the system is self-regulating.
+Each agent is economically autonomous. It pays for its own API calls, 0G Compute inference, and on-chain data queries via **USDC nanopayments on Arc**. These are gas-free micro-transactions. The vault allocates budgets. An agent that costs more than the value of its signals is naturally de-prioritized.
 
 ---
 
-## User Experience
+## Project Structure
 
-The user sees none of the complexity.
+```
+ETHCC_DVB/
+  contracts/                        # Solidity smart contracts (Foundry)
+    src/
+      vault/ArcMindVault.sol        # ERC-4626, arcMIND token, buffer 10%, onlyTEE
+      strategy/                     # 10 strategy contracts + IStrategy interface
+        AaveStrategy.sol            #   Aave V3, ZeroLend, Yei Finance, Radiant
+        CompoundStrategy.sol        #   Compound V3
+        CompoundV2Strategy.sol      #   Benqi, Sonne, Moonwell, Mendi, Venus
+        MorphoStrategy.sol          #   Morpho Blue
+        SiloStrategy.sol            #   Silo V2
+        YearnStrategy.sol           #   Yearn V3
+        PendleStrategy.sol          #   Pendle V2 (PT fixed yield)
+        FluidStrategy.sol           #   Fluid (fToken)
+      cctp/CCTPBridge.sol           # CCTP V2 burn/mint
+      nanopay/AgentPaymaster.sol    # USDC micro-payments for agents
+      interfaces/                   # 10 protocol interfaces
+    test/                           # 32 unit tests, 32 pass
+    script/                         # Deploy scripts + CCTP attestation helper
 
-**Deposit.** Connect to ArcMind on Arc. Deposit USDC (gas paid in USDC). Receive `arcMIND` tokens.
+  agents/                           # Autonomous AI agents (TypeScript)
+    src/
+      core/
+        Agent.ts                    # Main agent class — observe/reason/propose/execute/learn
+        AgentConfig.ts              # Chain config types
+        types.ts                    # AgentProposal, TEEResponse, SignedTxBlob
+      api/
+        AgentServer.ts              # HTTP API — proposals, TEE responses, batch endpoint
+      data/
+        MarketDataProvider.ts       # Yield data facade
+        ChainDataFeeds.ts           # Base yield data per chain
+        DataSimulator.ts            # Brownian motion variations
+        DeFiLlamaProvider.ts        # External yield data source
+      modules/
+        observer/
+          YieldObserver.ts          # Collects yields from MarketDataProvider
+          RiskObserver.ts           # TVL, peg, sequencer, oracle checks
+        reasoner/
+          DepositImpact.ts          # Kink-model rate compression, optimal split
+          RiskScorer.ts             # Weighted risk scoring
+        proposer/
+          ProposalBuilder.ts        # Builds JSON proposal for TEE
+          YieldCurve.ts             # Multi-protocol yield curve
+        executor/
+          TxBroadcaster.ts          # Broadcasts pre-signed TX blobs
+          PositionManager.ts        # Tracks active positions
+        learner/
+          PerformanceTracker.ts     # Predictions vs actuals tracking
+      integrations/
+        ZeroGCompute.ts             # 0G Compute — ML inference
+        ZeroGStorage.ts             # 0G Storage — persistent memory
+        ContractRegistry.ts         # On-chain contract lookup
+      chains/                       # 13 chain configs (Base, ARB, ETH, AVAX, OP, ...)
+      index.ts                      # Entry point
+    scripts/
+      check-balances.ts             # Check ETH+USDC on all chains
+    test/                           # 25 tests, 25 pass
 
-**Earn.** Autonomous agents optimize 24/7 across all chains. Yields are harvested and auto-compounded. `arcMIND` tokens increase in value. No action required.
+  orchestrator/                     # TEE orchestrator (TypeScript)
+    cre-workflow/                   # Chainlink CRE Workflow
+      main.ts                       # CRE entry — ConfidentialHTTP, validate, reallocate, distribute
+      validate.ts                   # Proposal validation (safety, diversification, yield coherence)
+      reallocate.ts                 # Cross-chain capital reallocation algorithm
+      config.staging.json           # Runtime config (chains, thresholds, strategy addresses)
+      workflow.yaml                 # CRE workflow settings
+      package.json                  # @chainlink/cre-sdk dependency
+    src/
+      index.ts                      # Standalone TEE orchestrator (local mode)
+      tee/TxSigner.ts              # TX signing with real nonce/gas + USDC approve
+      cre/workflow.ts              # CRE integration layer
+      attestation/Attestor.ts      # 0G Chain attestation
+    project.yaml                    # CRE project RPCs
+    secrets.yaml                    # Vault DON secret mappings
+    test/                           # 14 tests (including 8 E2E), 14 pass
 
-**Withdraw.** Burn `arcMIND` tokens. Receive USDC plus accumulated yield on Arc. Option to receive on any supported chain via CCTP.
+  shared/                           # Shared types and config
+    types.ts                        # TypeScript types (AgentProposal, TEEResponse)
+    constants.ts                    # USDC addresses, CCTP domains, chain IDs (13 chains)
+    proposal.schema.json            # JSON Schema for proposals
+    deployments.json                # All deployed contract addresses
 
-**Verify.** Check the Chainlink TEE attestation trail on 0G Chain to confirm every decision was computed inside a secure enclave. No trust required.
+  frontend/                         # Dashboard (Next.js)
+    src/
+      app/                          # App router
+      components/                   # React components
+```
 
 ---
 
-## ArcMind vs Giza
+## Implementation Status
 
-| | Giza (ARMA) | ArcMind |
-|---|---|---|
-| **Scope** | Single chain (Base) | All CCTP-compatible chains simultaneously |
-| **Agent model** | One centralized ML model | One autonomous AI agent per chain, each specialized |
-| **Cross-chain** | None — deposits on one chain | TEE reallocates capital across chains every 6-7h via CCTP |
-| **Privacy** | Strategy visible on-chain | Strategy exists nowhere — agents are blind between chains, TEE fuses privately |
-| **Deposit impact** | Recent Optimizer upgrade models compression | Each agent models post-deposit yield for its chain's pools |
-| **Verifiability** | Execution via EigenLayer AVS | Chainlink TEE attestation anchored on 0G Chain |
-| **Insider risk** | Team knows the model | Even the creator doesn't know the cross-chain allocation — it emerges from blind proposals |
-| **Resilience** | Single point of failure | One agent goes down, other chains continue. 0G Compute decentralized. |
-| **AI compute** | Centralized servers | Decentralized 0G Compute with verifiable inference |
-| **Memory** | Centralized database | Decentralized 0G Storage, each agent learns independently |
+### Smart Contracts — Deployed & Tested
 
----
-
-## Implementation Status (Smart Contracts — Adrian)
-
-### Deployed & Tested on Testnet
-
-All smart contracts are **live on 4 chains** with **32/32 unit tests passing** and **full CCTP bridge verified end-to-end**.
+All smart contracts are **live on testnet** with **32/32 unit tests passing** and **full CCTP bridge verified end-to-end**.
 
 #### Vault (Arc Testnet)
 | Contract | Address | Status |
 |----------|---------|--------|
-| **ArcMindVault** (arcMIND ERC-4626) | `0xE5cD5a7B782800e833dDe8648675e693CBe04ab6` | Deposit/Withdraw/Allocate tested |
+| **ArcMindVault** (ERC-4626) | `0xE5cD5a7B782800e833dDe8648675e693CBe04ab6` | Deposit/Withdraw/Allocate tested |
 | CCTPBridge | `0xf8a2d17B7ba46f9Fc0AD5e19947AdD65e4Efdc4E` | CCTP V2 (7 params) |
 | CCTPRouter | `0x857b2bD4Ae427162979Cf90C7A5Be4fA19a1507C` | Deployed |
 | AgentPaymaster | `0x8a2A55F62dF6f22e96525Da67c83F6B9caB85898` | Register/Fund/Pay tested |
 
-#### Strategies (ETH / Base / ARB Sepolia)
-| Chain | Strategies Deployed |
-|-------|-------------------|
-| ETH Sepolia | AaveStrategy, CompoundStrategy, MorphoStrategy |
-| Base Sepolia | AaveStrategy, MorphoStrategy |
-| ARB Sepolia | AaveStrategy |
+#### Strategy Contracts (Testnet)
+| Chain | Strategies Deployed | Addresses |
+|-------|-------------------|-----------|
+| ETH Sepolia | AaveStrategy, CompoundStrategy, MorphoStrategy | `0xD3aD...`, `0x857b...`, `0x8a2A...` |
+| Base Sepolia | AaveStrategy, MorphoStrategy | `0x5632...`, `0xB990...` |
+| ARB Sepolia | AaveStrategy | `0x5632...` |
+| Avalanche Fuji | AaveStrategy | `0x518C...` |
 
 #### 10 Strategy Contracts — Covering 30+ Protocols
 | Strategy | Protocols Covered | Chains (Mainnet) |
@@ -630,59 +671,134 @@ All smart contracts are **live on 4 chains** with **32/32 unit tests passing** a
 
 #### CCTP Bridge — Tested End-to-End
 ```
-Arc Testnet → depositForBurn V2 → Circle attestation (complete) → receiveMessage V2 on Base Sepolia
+Arc Testnet -> depositForBurn V2 -> Circle attestation -> receiveMessage V2 on Base Sepolia
 0.5 USDC sent from Arc, 0.5 USDC received on Base. Full roundtrip verified.
 ```
 
-**Key discovery:** Arc USDC precompile blocks `depositForBurn` from contracts. The vault transfers USDC to the TEE (EOA), which calls `depositForBurn` directly. MessageTransmitter V2 address is `0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275` on all chains.
+**Key discovery:** Arc USDC precompile blocks `depositForBurn` from contracts. The vault transfers USDC to the TEE (EOA), which calls `depositForBurn` directly. MessageTransmitter V2 address: `0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275` on all chains.
 
-#### On-Chain Tests Passed
-| Test | Result |
-|------|--------|
-| Vault deposit/withdraw | PASS |
-| allocateToChain (vault accounting) | PASS |
-| recallFromChain | PASS |
-| Buffer enforcement (10% minimum) | PASS (reverts correctly) |
-| Paymaster register/fund/pay | PASS |
-| CCTP Arc → Base (full roundtrip) | PASS |
-| CompoundStrategy deposit/withdraw | PASS |
-| CompoundStrategy estimatedYield | PASS (16 bps) |
-| AaveStrategy estimatedYield | PASS (5759 bps) |
+### Agents — Implemented & Tested
 
-#### Repository Structure
-```
-contracts/
-  src/
-    vault/ArcMindVault.sol          # ERC-4626, arcMIND token, buffer 10%, onlyTEE
-    strategy/                        # 10 strategy contracts + IStrategy interface
-    cctp/CCTPBridge.sol              # CCTP V2 burn/mint
-    nanopay/AgentPaymaster.sol       # USDC micro-payments for agents
-    interfaces/                      # 10 protocol interfaces
-  test/                              # 32 tests, 32 pass
-  script/                            # Deploy scripts + CCTP attestation helper
-  deployments/deployments.json       # All deployed addresses
-shared/
-  types.ts                           # TypeScript types (AgentProposal, TEEResponse)
-  constants.ts                       # Addresses, domains, thresholds
-  proposal.schema.json               # JSON Schema for agent proposals
-  deployments.json                   # Contract addresses for all chains
-```
+**25/25 tests passing.** Full agent lifecycle implemented:
+
+- **13 chain configs** — ETH, Base, ARB, AVAX, OP, Polygon, Unichain, Linea, Sonic, World Chain, Sei, BNB, Ink
+- **Data feed layer** — Realistic yield data with Brownian motion variations (reproducing real DeFi dynamics)
+- **Deposit impact modeling** — Kink-model (Aave/Compound rate curve) with post-deposit yield compression
+- **Risk scoring** — TVL monitoring, sequencer health, oracle checks, depeg detection
+- **Proposal builder** — Full JSON proposal conforming to shared schema
+- **TEE polling** — Agent polls `GET /tee/response/:chain` every 2s with 20s timeout (consume-once pattern)
+- **TX execution** — USDC approve + strategy deposit, real nonce/gasPrice from RPC
+- **API server** — HTTP endpoints for proposals, status, batch TEE responses
+- **0G Compute** — ML inference via `@0glabs/0g-serving-broker` (OpenAI-compatible)
+- **0G Storage** — Persistent memory via `@0gfoundation/0g-ts-sdk`
+
+### CRE Workflow — Implemented & Simulated
+
+**Successfully simulated via `cre workflow simulate`.**
+
+The Chainlink CRE Workflow is a real TypeScript workflow using the official `@chainlink/cre-sdk`:
+
+| CRE Feature | Implementation |
+|-------------|---------------|
+| `CronCapability` | Triggers every 30s (`*/30 * * * * *`) |
+| `ConfidentialHTTPClient` | Fetches proposals with `encryptOutput: true` |
+| `Vault DON Secrets` | `{{.AGENT_API_KEY}}` injected from encrypted vault |
+| `HTTPClient` | Batch response distribution with `consensusIdenticalAggregation` |
+| `Runner` | Workflow registration and execution |
+| Validation | Safety >= 0.7, no critical alerts, max 40% per protocol, yield coherence |
+| Reallocation | Cross-chain capital optimization, max 50% per chain, 10% buffer |
+| Attestation | Deterministic decision hash for on-chain anchoring |
+
+### Orchestrator (Standalone Mode) — Implemented & Tested
+
+**14/14 tests passing** (including 8 E2E tests).
+
+- **TX signing** — Real nonce/gasPrice from RPC with 5s timeout, nonce offset tracking for multiple TXs per cycle
+- **USDC approve** — Automatic ERC-20 approve before strategy deposit
+- **0G attestation** — Decision hashes anchored on 0G Chain
+- **CRE integration** — Bridge between standalone mode and CRE workflow
 
 ---
 
-## MVP Scope (Hackathon)
+## Getting Started
 
-| Component | Scope |
-|-----------|-------|
-| **Vault** | ERC-4626 on Arc Testnet with arcMIND token |
-| **Agents** | 3-5 agents (Base, Arbitrum, Ethereum, optionally OP and Polygon). Same agent template, configured per chain. Each agent: yield analysis, deposit impact modeling, risk monitoring, strategy proposal, execution. |
-| **Agent AI** | ML inference on 0G Compute (yield prediction, risk scoring). Memory on 0G Storage. |
-| **TEE** | Chainlink Confidential Compute. Job 1: validate strategies every 30s. Job 2: demonstrate one cross-chain reallocation via CCTP. |
-| **CRE Workflow** | Orchestrates the 30s cycle. Simulable via CRE CLI. |
-| **CCTP** | Real transfers: Arc -> Base Sepolia, Arc -> Arbitrum Sepolia. One live reallocation demo. |
-| **Nanopayments** | Agent-to-API payments via Arc nanopayments. |
-| **Attestation** | TEE attestation of each cycle anchored on 0G Chain. |
-| **Dashboard** | Real-time visualization: each chain's agent showing its current strategy, yield curves, safety scores. TEE decisions visualized. Reallocation flows animated. User sees APY and balance. |
+### Prerequisites
+
+- Node.js >= 18
+- [Foundry](https://book.getfoundry.sh/) for smart contracts
+- [CRE CLI](https://docs.chain.link/cre) for workflow simulation (optional)
+
+### Install
+
+```bash
+# Agents
+cd agents && npm install
+
+# Orchestrator
+cd orchestrator && npm install
+
+# CRE Workflow (requires Bun)
+cd orchestrator/cre-workflow && bun install
+
+# Smart contracts
+cd contracts && forge install
+```
+
+### Configure
+
+```bash
+# Copy env templates
+cp agents/.env.example agents/.env
+cp orchestrator/.env.example orchestrator/.env
+
+# Edit .env files with your private keys
+```
+
+### Wallet Funding (Testnet)
+
+Each agent and the TEE need ETH (for gas) and USDC on their respective chains.
+
+| Chain | ETH Faucet | USDC Faucet |
+|-------|-----------|-------------|
+| ETH Sepolia | [sepoliafaucet.com](https://sepoliafaucet.com) | [faucet.circle.com](https://faucet.circle.com) |
+| Base Sepolia | [faucet.circle.com](https://faucet.circle.com) | [faucet.circle.com](https://faucet.circle.com) |
+| ARB Sepolia | [faucet.arbitrum.io](https://faucet.arbitrum.io) | [faucet.circle.com](https://faucet.circle.com) |
+| Avalanche Fuji | [faucet.avax.network](https://faucet.avax.network) | [faucet.circle.com](https://faucet.circle.com) |
+| 0G Newton | [faucet.0g.ai](https://faucet.0g.ai) | — (OG tokens for compute/storage) |
+
+```bash
+# Check balances on all chains
+cd agents && npx ts-node scripts/check-balances.ts
+```
+
+### Run
+
+```bash
+# Run a single agent
+cd agents && npm run dev -- --chain=base
+
+# Run all agents
+cd agents && npm run dev -- --all
+
+# Run standalone orchestrator
+cd orchestrator && npm run dev
+
+# Simulate CRE workflow
+cd orchestrator/cre-workflow && cre workflow simulate .
+```
+
+### Test
+
+```bash
+# Agent tests (25/25)
+cd agents && npm test
+
+# Orchestrator tests (14/14)
+cd orchestrator && npm test
+
+# Smart contract tests (32/32)
+cd contracts && forge test
+```
 
 ---
 
@@ -690,12 +806,12 @@ shared/
 
 | Track | Prize | Fit |
 |-------|------:|-----|
-| **Arc — Chain Abstracted USDC Apps** | $3,000 | Arc as settlement hub. Capital distributed to 5+ chains via CCTP, reallocated dynamically by TEE. User interacts with one app on one chain. Multiple blockchains as one liquidity surface. |
-| **Arc — Agentic Economy with Nanopayments** | $6,000 | Each agent is an autonomous economic entity paying for API calls, compute, and data via USDC nanopayments on Arc. Self-regulating budgets. |
-| **Chainlink — Best Workflow with CRE** | $4,000 | Full agent cycle as CRE Workflow: cron triggers, Confidential HTTP for agent communication, TEE fusion, on-chain execution. Event triggers for emergencies. |
-| **Chainlink — Privacy Standard** | $2,000 | Confidential Compute is the product's core. Without the TEE, agents can't fuse proposals privately and cross-chain allocation can't be hidden. TEE attestation for verifiability. |
-| **Chainlink — Connect the World** | $1,000 | Chainlink Data Feeds for decentralized price data. Multiple Chainlink services driving on-chain state changes. |
-| **0G — Best DeFi App on 0G** | $6,000 | Agents run ML inference on 0G Compute. Memory on 0G Storage. Models fine-tuned via 0G. Attestations on 0G Chain. 0G's track literally asks for "multi-agent DeFi swarm." |
+| **Arc — Chain Abstracted USDC Apps** | $3,000 | Arc as settlement hub. Capital distributed to 5+ chains via CCTP, reallocated dynamically by TEE. User interacts with one app on one chain. |
+| **Arc — Agentic Economy with Nanopayments** | $6,000 | Each agent is an autonomous economic entity paying for API calls, compute, and data via USDC nanopayments on Arc. |
+| **Chainlink — Best Workflow with CRE** | $4,000 | Full CRE Workflow: CronCapability trigger, ConfidentialHTTPClient for proposals, validation + reallocation logic, HTTPClient batch response with consensusIdenticalAggregation. Successfully simulated. |
+| **Chainlink — Privacy Standard** | $2,000 | ConfidentialHTTPClient with `encryptOutput: true`. Vault DON Secrets with `{{.AGENT_API_KEY}}`. Proposals never leave the encrypted boundary. Strategy exists only inside the DON enclave. |
+| **Chainlink — Connect the World** | $1,000 | Multiple Chainlink services: CRE Workflow orchestration, ConfidentialHTTPClient, HTTPClient, Vault DON Secrets. Chainlink Data Feeds for price verification. |
+| **0G — Best DeFi App on 0G** | $6,000 | Agents run ML inference on 0G Compute (`qwen-2.5-7b-instruct`). Memory on 0G Storage. Attestations on 0G Chain. Multi-agent DeFi swarm. |
 | **Total Potential** | **$22,000** | |
 
 ---
@@ -705,14 +821,14 @@ shared/
 | Component | Technology | Role in ArcMind |
 |-----------|------------|-----------------|
 | Settlement Hub | Arc (Circle L1) | Vault, arcMIND tokens, USDC gas, nanopayments, CCTP hub |
-| USDC Transport | Circle CCTP + Gateway | Cross-chain capital distribution and reallocation, <500ms |
-| Orchestration | Chainlink CRE | Workflow for 30s agent cycles, event triggers for emergencies |
-| Private Brain | Chainlink Confidential Compute | TEE for proposal fusion, strategy validation, cross-chain allocation, TX signing |
-| Data Feeds | Chainlink Data Feeds | Decentralized token prices |
+| USDC Transport | Circle CCTP + Gateway | Cross-chain capital distribution and reallocation |
+| Orchestration | Chainlink CRE Workflow | 30s cron cycle, proposal collection, validation, response distribution |
+| Private Brain | Chainlink ConfidentialHTTPClient | Encrypted proposal fetch, Vault DON secrets, enclave-only computation |
 | AI Compute | 0G Compute | Agent ML inference (yield prediction, risk scoring, anomaly detection) |
 | Memory | 0G Storage | Persistent yield histories, performance logs, fine-tuned models |
 | Audit Trail | 0G Chain | TEE attestation anchoring, public verifiability |
-| Smart Contracts | Solidity (EVM) | ERC-4626 vault on Arc, strategy contracts on each chain |
+| Smart Contracts | Solidity (Foundry) | ERC-4626 vault on Arc, 10 strategy contracts on each chain, CCTP bridge |
+| Agents | TypeScript (13 chains) | Autonomous AI fund managers — observe, reason, propose, execute, learn |
 
 ---
 
@@ -720,7 +836,7 @@ shared/
   <i>One agent per chain. Each blind to the others.<br>
   A TEE that sees everything for milliseconds, then forgets.<br>
   Capital that flows to where it earns the most.<br>
-  Built on Arc. Private by Chainlink. Computed on 0G.</i>
+  Built on Arc. Orchestrated by Chainlink CRE. Computed on 0G.</i>
 </p>
 
 <p align="center">

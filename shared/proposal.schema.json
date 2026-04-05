@@ -6,7 +6,7 @@
   "properties": {
     "agent": {
       "type": "string",
-      "enum": ["ETH", "BASE", "ARB"]
+      "enum": ["ETH", "AVAX", "OP", "ARB", "BASE", "POLY", "UNICHAIN", "LINEA", "SONIC", "WORLD", "SEI", "BNB", "INK"]
     },
     "timestamp": { "type": "integer" },
     "strategy": {

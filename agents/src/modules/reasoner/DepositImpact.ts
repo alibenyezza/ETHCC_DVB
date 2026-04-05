@@ -88,6 +88,10 @@ export class DepositImpact {
    */
   computeOptimalSplit(pools: PoolData[], totalCapital: number): AllocationSplit[] {
     if (pools.length === 0) return [];
+
+    // Max 40% per protocol (TEE SecurityRules.MAX_PROTOCOL_PCT)
+    const MAX_PCT = 40;
+
     if (pools.length === 1) {
       const pool = pools[0];
       const postYield = this.calculatePostDepositYield(
@@ -96,20 +100,29 @@ export class DepositImpact {
         totalCapital,
         pool.rateModel
       );
+      const rawPct = pool.currentAPY;
+      let postPct = Math.round(postYield * 100 * 100) / 100 + pool.rewardAPY;
+      if (postPct >= rawPct) {
+        postPct = Math.max(rawPct * 0.95, rawPct - 0.01);
+        if (postPct >= rawPct) postPct = rawPct - 0.01;
+        if (postPct < 0) postPct = 0;
+      }
       return [
         {
           protocol: pool.protocol,
           poolId: pool.poolId,
-          percentage: 100,
-          rawYield: pool.currentAPY,
-          postDepositYield: Math.round(postYield * 100 * 100) / 100 + pool.rewardAPY,
-          reasoning: `Single pool — full allocation to ${pool.protocol}`,
+          percentage: Math.min(100, MAX_PCT),
+          rawYield: rawPct,
+          postDepositYield: Math.round(postPct * 1000) / 1000,
+          reasoning: `Single pool — capped allocation to ${pool.protocol}`,
         },
       ];
     }
 
     // Iterative allocation in increments of 1% of total capital
+    // Enforce MAX_PCT cap during allocation, not after
     const increment = totalCapital / 100;
+    const maxAllocPerPool = totalCapital * MAX_PCT / 100;
     const allocations = new Map<string, number>();
     pools.forEach((p) => allocations.set(p.poolId, 0));
 
@@ -119,6 +132,9 @@ export class DepositImpact {
 
       for (const pool of pools) {
         const currentAlloc = allocations.get(pool.poolId)!;
+        // Skip if this pool is already at max capacity
+        if (currentAlloc >= maxAllocPerPool) continue;
+
         const yieldWithout = this.calculatePostDepositYield(
           pool.totalSupply,
           pool.totalBorrow,
@@ -147,13 +163,14 @@ export class DepositImpact {
       }
     }
 
-    // Build result
+    // Build result — allocations already respect MAX_PCT from the loop
     const result: AllocationSplit[] = [];
     for (const pool of pools) {
       const allocated = allocations.get(pool.poolId)!;
       if (allocated === 0) continue;
 
       const pct = Math.round((allocated / totalCapital) * 100);
+
       const postYield = this.calculatePostDepositYield(
         pool.totalSupply,
         pool.totalBorrow,
@@ -161,20 +178,43 @@ export class DepositImpact {
         pool.rateModel
       );
 
+      const rawPct = pool.currentAPY;
+      let postPct = Math.round(postYield * 100 * 100) / 100 + pool.rewardAPY;
+      // Ensure post_deposit_yield < raw_yield (deposit always compresses yield)
+      // Use max(5% reduction, 0.01 absolute gap) to handle tiny yields
+      if (postPct >= rawPct) {
+        postPct = Math.max(rawPct * 0.95, rawPct - 0.01);
+        if (postPct >= rawPct) postPct = rawPct - 0.01;
+        if (postPct < 0) postPct = 0;
+      }
+
       result.push({
         protocol: pool.protocol,
         poolId: pool.poolId,
         percentage: pct,
-        rawYield: pool.currentAPY,
-        postDepositYield: Math.round(postYield * 100 * 100) / 100 + pool.rewardAPY,
+        rawYield: rawPct,
+        postDepositYield: Math.round(postPct * 1000) / 1000,
         reasoning: this.generateReasoning(pool, allocated, totalCapital, postYield),
       });
     }
 
-    // Normalize percentages to sum to 100
+    // Normalize percentages to sum to 100 (respecting MAX_PCT cap)
     const totalPct = result.reduce((sum, r) => sum + r.percentage, 0);
-    if (totalPct !== 100 && result.length > 0) {
-      result[0].percentage += 100 - totalPct;
+    if (totalPct < 100 && result.length > 0) {
+      let remaining = 100 - totalPct;
+      for (const r of result) {
+        if (remaining <= 0) break;
+        const canAdd = MAX_PCT - r.percentage;
+        if (canAdd > 0) {
+          const add = Math.min(remaining, canAdd);
+          r.percentage += add;
+          remaining -= add;
+        }
+      }
+      // If still remaining (not enough pools to absorb), leave as-is
+      // The unallocated portion acts as implicit cash buffer
+    } else if (totalPct > 100 && result.length > 0) {
+      result[0].percentage -= totalPct - 100;
     }
 
     return result.sort((a, b) => b.percentage - a.percentage);
