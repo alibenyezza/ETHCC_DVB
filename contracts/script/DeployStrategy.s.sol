@@ -56,6 +56,22 @@ contract DeployStrategy is Script {
     address constant MORPHO_BASE = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
 
     // =========================================================================
+    // OP Sepolia
+    // =========================================================================
+    address constant AAVE_USDC_OP = 0x5fd84259d66Cd46123540766Be93DFE6D43130D7;
+    address constant AAVE_POOL_OP = 0xb50201558B00496A145fE76f7424749556E326D8;
+    address constant AAVE_ATOKEN_OP = 0xa818F1B57c201E092C4A2017A91815034326Efd1;
+    address constant AAVE_DATA_PROVIDER_OP = 0x501B4c19dd9C2e06E94dA7b6D5Ed4ddA013EC741;
+
+    // =========================================================================
+    // AVAX Fuji
+    // =========================================================================
+    address constant AAVE_USDC_AVAX = 0x6a17716Ce178e84835cfA73AbdB71cb455032456;
+    address constant AAVE_POOL_AVAX = 0xf319Bb55994dD1211bC34A7A26A336C6DD0B1b00;
+    address constant AAVE_ATOKEN_AVAX = 0x2c4a078f1FC5B545f3103c870d22f9AC5F0F673E;
+    address constant AAVE_DATA_PROVIDER_AVAX = 0x0B59871DF373136bB7753A7A2675b47ffA0ccC86;
+
+    // =========================================================================
     // Pendle (mainnet only — no testnet deployment)
     // =========================================================================
     // ETH mainnet Router: 0x888888888889758F76e7103c6CbF23ABbF58F946
@@ -84,6 +100,10 @@ contract DeployStrategy is Script {
             _deployArbSepolia(authorized);
         } else if (chainHash == keccak256("base_sepolia")) {
             _deployBaseSepolia(authorized);
+        } else if (chainHash == keccak256("op_sepolia")) {
+            _deployOpSepolia(authorized);
+        } else if (chainHash == keccak256("avax_fuji")) {
+            _deployAvaxFuji(authorized);
         } else {
             revert("Unknown chain");
         }
@@ -145,5 +165,19 @@ contract DeployStrategy is Script {
             AAVE_USDC_BASE, MORPHO_BASE, emptyParams, authorized
         );
         console.log("MorphoStrategy (Base Sepolia):", address(morpho));
+    }
+
+    function _deployOpSepolia(address authorized) internal {
+        AaveStrategy aave = new AaveStrategy(
+            AAVE_USDC_OP, AAVE_POOL_OP, AAVE_ATOKEN_OP, AAVE_DATA_PROVIDER_OP, authorized
+        );
+        console.log("AaveStrategy (OP Sepolia):", address(aave));
+    }
+
+    function _deployAvaxFuji(address authorized) internal {
+        AaveStrategy aave = new AaveStrategy(
+            AAVE_USDC_AVAX, AAVE_POOL_AVAX, AAVE_ATOKEN_AVAX, AAVE_DATA_PROVIDER_AVAX, authorized
+        );
+        console.log("AaveStrategy (AVAX Fuji):", address(aave));
     }
 }
