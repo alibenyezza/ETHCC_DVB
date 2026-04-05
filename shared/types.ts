@@ -16,7 +16,20 @@ export interface AgentProposal {
   prediction_accuracy_30d: number;
 }
 
-export type ChainName = "ETH" | "BASE" | "ARB";
+export type ChainName =
+  | "ETH"       // Domain 0
+  | "AVAX"      // Domain 1
+  | "OP"        // Domain 2
+  | "ARB"       // Domain 3
+  | "BASE"      // Domain 6
+  | "POLY"      // Domain 7
+  | "UNICHAIN"  // Domain 10
+  | "LINEA"     // Domain 11
+  | "SONIC"     // Domain 13
+  | "WORLD"     // Domain 14
+  | "SEI"       // Domain 16
+  | "BNB"       // Domain 17
+  | "INK";      // Domain 21
 
 export interface Strategy {
   positions: Position[];

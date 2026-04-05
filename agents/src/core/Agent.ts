@@ -21,6 +21,7 @@ import { PositionManager } from "../modules/executor/PositionManager";
 import { PerformanceTracker } from "../modules/learner/PerformanceTracker";
 import { ZeroGCompute } from "../integrations/ZeroGCompute";
 import { ZeroGStorage } from "../integrations/ZeroGStorage";
+import { AgentServer } from "../api/AgentServer";
 
 /**
  * Autonomous AI Agent for a single chain.
@@ -61,6 +62,9 @@ export class Agent {
   // 0G Integrations
   private zgCompute: ZeroGCompute;
   private zgStorage: ZeroGStorage;
+
+  // API Server (for TEE + Dashboard)
+  private server: AgentServer | null = null;
 
   constructor(config: AgentConfig) {
     this.config = config;
@@ -215,6 +219,11 @@ export class Agent {
       history
     );
 
+    // Publish proposal to API server (for TEE + Dashboard)
+    if (this.server) {
+      this.server.updateProposal(this.chain, proposal);
+    }
+
     // ═══ 4. SEND to TEE ═══
     const teeResponse = await this.sendToTEE(proposal);
 
@@ -295,6 +304,13 @@ export class Agent {
       txBlobs: [],
       message: "Auto-approved (standalone mode)",
     };
+  }
+
+  /**
+   * Attach the API server so proposals are published for TEE/Dashboard.
+   */
+  setServer(server: AgentServer): void {
+    this.server = server;
   }
 
   /**

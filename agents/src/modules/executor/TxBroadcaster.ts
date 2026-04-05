@@ -1,21 +1,32 @@
 import { ethers } from "ethers";
-import { SignedTxBlob } from "../../core/types";
+import { ChainName, SignedTxBlob } from "../../core/types";
+import { getStrategyAddress, getCCTPBridgeAddress } from "../../integrations/ContractRegistry";
+
+// IStrategy ABI (from Adrian's contracts)
+const STRATEGY_ABI = [
+  "function deposit(uint256 amount) external",
+  "function withdraw(uint256 amount) external returns (uint256)",
+  "function withdrawAll() external returns (uint256)",
+  "function balanceOf() external view returns (uint256)",
+  "function estimatedYield() external view returns (uint256)",
+  "function protocolName() external view returns (string)",
+];
 
 /**
  * Receives pre-signed transaction blobs from the TEE and broadcasts them.
- * Adds random delay between transactions for anti-correlation (MEV protection).
+ * Can also interact directly with Adrian's strategy contracts.
  */
 export class TxBroadcaster {
   private provider: ethers.JsonRpcProvider;
-  private chain: string;
+  private chain: ChainName;
 
   constructor(chain: string, provider: ethers.JsonRpcProvider) {
-    this.chain = chain;
+    this.chain = chain as ChainName;
     this.provider = provider;
   }
 
   /**
-   * Execute a batch of pre-signed transactions.
+   * Execute a batch of pre-signed transactions from the TEE.
    * Broadcasts each TX with a random delay to prevent correlation.
    */
   async execute(txBlobs: SignedTxBlob[]): Promise<string[]> {
@@ -53,6 +64,46 @@ export class TxBroadcaster {
     }
 
     return hashes;
+  }
+
+  /**
+   * Read the current balance from a deployed strategy contract.
+   */
+  async readStrategyBalance(protocol: string): Promise<number | null> {
+    const addr = getStrategyAddress(this.chain, protocol);
+    if (!addr) return null;
+
+    try {
+      const contract = new ethers.Contract(addr, STRATEGY_ABI, this.provider);
+      const balance = await contract.balanceOf();
+      return Number(ethers.formatUnits(balance, 6)); // USDC = 6 decimals
+    } catch (error: any) {
+      console.log(`[${this.chain}][EXEC] Cannot read strategy ${protocol}: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Read the estimated yield from a deployed strategy contract.
+   */
+  async readStrategyYield(protocol: string): Promise<number | null> {
+    const addr = getStrategyAddress(this.chain, protocol);
+    if (!addr) return null;
+
+    try {
+      const contract = new ethers.Contract(addr, STRATEGY_ABI, this.provider);
+      const yieldBps = await contract.estimatedYield();
+      return Number(yieldBps) / 100; // bps -> percentage
+    } catch (error: any) {
+      return null;
+    }
+  }
+
+  /**
+   * Get the deployed strategy address for a protocol (for logging).
+   */
+  getStrategyAddress(protocol: string): string | null {
+    return getStrategyAddress(this.chain, protocol);
   }
 
   /**
