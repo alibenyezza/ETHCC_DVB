@@ -34,7 +34,7 @@ const AgentPerformance = () => {
 
   return (
     <div className="w-full mb-8">
-      <div className="grid grid-cols-4 gap-4 mb-4 text-xs font-semibold text-white/40 uppercase tracking-[0.2em] pb-3 border-b border-white/10">
+      <div className="grid grid-cols-4 gap-4 mb-4 text-xs font-semibold text-white uppercase tracking-[0.2em] pb-3 border-b border-white/10">
         <div>Agent</div>
         <div>Allocation</div>
         <div>Target APY</div>
@@ -45,12 +45,12 @@ const AgentPerformance = () => {
         {performanceData.map((data, idx) => (
           <div key={idx} className="grid grid-cols-4 gap-4 items-center text-sm font-medium">
             <div className="flex items-center gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-              <span className="tracking-wide text-white/90">{data.chain}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+              <span className="tracking-wide text-white">{data.chain}</span>
             </div>
-            <div className="text-white/60">{data.allocation}</div>
-            <div className="text-white/60">{data.apy}</div>
-            <div className={`text-right tracking-wider ${data.pnl.startsWith('+') ? 'text-green-400/80' : 'text-red-400/80'}`}>
+            <div className="text-white">{data.allocation}</div>
+            <div className="text-white">{data.apy}</div>
+            <div className={`text-right tracking-wider ${data.pnl.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
               {data.pnl}
             </div>
           </div>
@@ -58,7 +58,7 @@ const AgentPerformance = () => {
       </div>
       
       <div className="mt-8 pt-4 flex justify-between items-center">
-        <span className="text-white/40 text-xs uppercase tracking-widest">Total Active Capital</span>
+        <span className="text-white text-xs uppercase tracking-widest">Total Active Capital</span>
         <span className="text-white font-light tracking-wide text-lg">85,000.00 USDC</span>
       </div>
     </div>

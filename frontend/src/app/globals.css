@@ -17,6 +17,8 @@
     @apply h-full text-white;
     background: radial-gradient(ellipse at 50% 0%, #0d0d2b 0%, #000000 55%);
     font-family: "Times New Roman", Times, serif;
+    overscroll-behavior-x: none;
+    overflow-x: hidden;
   }
 
   #root {

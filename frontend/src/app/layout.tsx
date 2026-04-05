@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import StaggeredMenu from "@/components/layout/StaggeredMenu";
+import SwipeBlocker from "@/components/layout/SwipeBlocker";
 import ConnectButtonWrapper from "@/components/wallet/ConnectButtonWrapper";
-import { HomeIcon, LayoutDashboardIcon, FileTextIcon, UsersIcon } from "lucide-react";
+import { HomeIcon, LayoutDashboardIcon, FileTextIcon, UsersIcon, GlobeIcon } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "ZENITH Orchestrator",
@@ -27,6 +28,11 @@ export default function RootLayout({
       icon: <LayoutDashboardIcon size={22} />,
     },
     {
+      label: 'Networks',
+      link: '/networks',
+      icon: <GlobeIcon size={22} />,
+    },
+    {
       label: 'Docs',
       link: '/#docs',
       icon: <FileTextIcon size={22} />,
@@ -41,6 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
+        <SwipeBlocker />
         <StaggeredMenu
           isFixed
           position="right"
