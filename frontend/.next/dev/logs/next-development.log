@@ -1,0 +1,4 @@
+{"timestamp":"00:00:00.605","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:58.392","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/julieyerolymos/ETHCC_DVB/frontend/src/app'"}
+{"timestamp":"00:00:58.394","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir '/Users/julieyerolymos/ETHCC_DVB/frontend/src/app'"}
+{"timestamp":"00:00:58.395","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir '/Users/julieyerolymos/ETHCC_DVB/frontend/src/app'"}

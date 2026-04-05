@@ -1,0 +1,69 @@
+/* [project]/src/components/ui/StarBorder.css [app-client] (css) */
+.star-border-container {
+  border-radius: 20px;
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+}
+
+.border-gradient-bottom {
+  opacity: 1;
+  z-index: 0;
+  border-radius: 50%;
+  width: 300%;
+  height: 50%;
+  animation: linear infinite alternate star-movement-bottom;
+  position: absolute;
+  bottom: -12px;
+  right: -250%;
+}
+
+.border-gradient-top {
+  opacity: 1;
+  z-index: 0;
+  border-radius: 50%;
+  width: 300%;
+  height: 50%;
+  animation: linear infinite alternate star-movement-top;
+  position: absolute;
+  top: -12px;
+  left: -250%;
+}
+
+.inner-content {
+  background: inherit;
+  color: #fff;
+  text-align: center;
+  z-index: 1;
+  border: none;
+  border-radius: 20px;
+  padding: 16px 26px;
+  font-size: 16px;
+  position: relative;
+}
+
+@keyframes star-movement-bottom {
+  0% {
+    opacity: 1;
+    transform: translate(0%);
+  }
+
+  100% {
+    opacity: .4;
+    transform: translate(-100%);
+  }
+}
+
+@keyframes star-movement-top {
+  0% {
+    opacity: 1;
+    transform: translate(0%);
+  }
+
+  100% {
+    opacity: .4;
+    transform: translate(100%);
+  }
+}
+
+/*# sourceMappingURL=src_components_ui_StarBorder_css_0w3-wzy._.single.css.map*/
