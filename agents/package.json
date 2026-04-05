@@ -1,0 +1,29 @@
+{
+  "name": "arcmind-agents",
+  "version": "1.0.0",
+  "description": "ArcMind — Autonomous AI Agents for Cross-Chain DeFi Yield Optimization",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check-balances": "ts-node scripts/check-balances.ts"
+  },
+  "dependencies": {
+    "ethers": "^6.13.0",
+    "@0glabs/0g-serving-broker": "^0.7.4",
+    "@0gfoundation/0g-ts-sdk": "^1.2.1",
+    "openai": "^4.50.0",
+    "dotenv": "^16.4.0",
+    "crypto-js": "^4.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^20.14.0",
+    "@types/crypto-js": "^4.2.2",
+    "ts-node": "^10.9.0",
+    "vitest": "^1.6.0"
+  }
+}

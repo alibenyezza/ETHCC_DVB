@@ -1,0 +1,8 @@
+# ArcMind CRE Workflow Settings
+staging-settings:
+  user-workflow:
+    workflow-name: "arcmind-tee-orchestrator-staging"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.staging.json"
+    secrets-path: "../secrets.yaml"

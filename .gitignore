@@ -1,0 +1,35 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.js.map
+.cre_build_tmp.js
+
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+contracts/foundry.lock
+
+# Next.js
+frontend/.next/
+
+# Local storage fallback
+.storage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Claude
+.claude/
